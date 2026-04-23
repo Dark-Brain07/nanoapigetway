@@ -139,13 +139,13 @@ export default function WalletConnector() {
 
 
       <div className="relative w-full">
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white text-[9px] rounded-full uppercase tracking-widest font-bold shadow-lg border border-fuchsia-400/30 z-10">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-[9px] rounded-full uppercase tracking-widest font-bold shadow-lg border border-cyan-400/30 z-10">
           Recommended
         </span>
         <button
           onClick={handleCircleConnect}
           disabled={circleLoading}
-          className="w-full px-4 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] gap-2 disabled:opacity-50"
+          className="w-full px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] gap-2 disabled:opacity-50"
         >
           {circleLoading ? (
             <>
@@ -171,7 +171,7 @@ export default function WalletConnector() {
         <button
           key={connector.uid}
           onClick={() => connect({ connector })}
-          className="w-full px-4 py-3 bg-gradient-to-r from-[#F6851B] to-[#E2761B] hover:from-[#E2761B] hover:to-[#CD6116] border border-[#F6851B]/50 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_15px_rgba(246,133,27,0.2)] hover:shadow-[0_0_20px_rgba(246,133,27,0.4)] gap-2 text-sm"
+          className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] gap-2 text-sm"
         >
           <Wallet size={16} className="text-white" />
           Connect MetaMask
