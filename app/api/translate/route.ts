@@ -1,6 +1,8 @@
 import { withX402 } from 'x402-next';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const handler = async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const text = searchParams.get('text') || 'hello';
