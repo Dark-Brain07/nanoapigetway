@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import WalletConnector from '../components/WalletConnector';
 import HomeWrapper from '../components/HomeWrapper';
+import UsdcBalance from '../components/UsdcBalance';
 
 export default function Home() {
   return (
@@ -13,10 +14,11 @@ export default function Home() {
             <img src="/nanoapigateway_logo.png" alt="NanoAPI Gateway Logo" className="w-8 h-8 rounded-lg object-cover group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(34,211,238,0.4)]" />
             <span className="font-bold text-white text-lg tracking-tight">NanoAPI<span className="text-cyan-400">Gateway</span></span>
           </Link>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <a href="https://faucet.circle.com" target="_blank" rel="noreferrer" className="relative inline-flex items-center justify-center px-4 py-1.5 font-black text-white bg-gradient-to-b from-red-500 to-red-600 rounded-xl shadow-[0_4px_0_rgb(153,27,27)] hover:from-red-400 hover:to-red-500 hover:shadow-[0_4px_0_rgb(153,27,27),0_0_15px_rgba(239,68,68,0.6)] active:translate-y-[4px] active:shadow-[0_0_0_rgb(153,27,27)] transition-all group overflow-hidden border border-red-400/50">
               <span className="relative z-10 animate-pulse tracking-[0.2em] text-[10px] sm:text-xs">FAUCET</span>
             </a>
+            <UsdcBalance />
           </div>
         </div>
       </header>
