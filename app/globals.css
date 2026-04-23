@@ -31,3 +31,12 @@ body {
     text-wrap: balance;
   }
 }
+
+@keyframes rgb-hue {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.animate-rgb-hue {
+  animation: rgb-hue 1.5s linear infinite;
+}
