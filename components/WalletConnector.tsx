@@ -171,9 +171,9 @@ export default function WalletConnector() {
         <button
           key={connector.uid}
           onClick={() => connect({ connector })}
-          className="w-full px-4 py-3 bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-slate-300 rounded-xl flex items-center justify-center font-semibold transition-all gap-2 text-sm"
+          className="w-full px-4 py-3 bg-gradient-to-r from-[#F6851B] to-[#E2761B] hover:from-[#E2761B] hover:to-[#CD6116] border border-[#F6851B]/50 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_15px_rgba(246,133,27,0.2)] hover:shadow-[0_0_20px_rgba(246,133,27,0.4)] gap-2 text-sm"
         >
-          <Wallet size={16} className="text-slate-400" />
+          <Wallet size={16} className="text-white" />
           Connect MetaMask
         </button>
       ))}
