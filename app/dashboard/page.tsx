@@ -3,6 +3,7 @@ import ApiCard from '../../components/ApiCard';
 import TransactionFeed from '../../components/TransactionFeed';
 import MarginAnalysis from '../../components/MarginAnalysis';
 import GatewayBridge from '../../components/GatewayBridge';
+import UsdcBalance from '../../components/UsdcBalance';
 
 export default function Dashboard() {
   return (
@@ -30,6 +31,7 @@ export default function Dashboard() {
                 <div className="absolute -top-1.5 right-6 w-3 h-3 bg-slate-900 border-l border-t border-slate-700 rotate-45"></div>
               </div>
             </div>
+            <UsdcBalance />
           </div>
         </div>
       </header>

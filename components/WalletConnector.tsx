@@ -105,14 +105,6 @@ export default function WalletConnector() {
               <Copy size={14} />
             </button>
           </div>
-          
-          <div className="flex items-center justify-between mt-1">
-            <span className="text-[10px] text-slate-600 font-mono">ID: {circleWallet.walletId.slice(0, 12)}...</span>
-            <div className="flex items-center gap-1.5 text-[10px] text-emerald-500/80 font-medium bg-emerald-950/20 px-2 py-0.5 rounded-full border border-emerald-900/30">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-              Auto-Pay Active
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -126,14 +118,14 @@ export default function WalletConnector() {
           <Wallet size={14} />
           MetaMask Connected
         </div>
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-cyan-400 text-sm">{address}</span>
-            <span className="text-purple-400 text-xs">{balance?.formatted} {balance?.symbol}</span>
+        <div className="flex justify-between items-center gap-3">
+          <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+            <span className="font-mono text-cyan-400 text-xs truncate" title={address}>{address}</span>
+            <span className="text-purple-400 text-xs truncate">{balance?.formatted} {balance?.symbol}</span>
           </div>
           <button
             onClick={() => disconnect()}
-            className="px-3 py-1.5 bg-red-900/40 text-red-400 rounded-lg hover:bg-red-900/60 transition-colors text-xs font-medium border border-red-800/40"
+            className="px-3 py-1.5 bg-red-900/40 text-red-400 rounded-lg hover:bg-red-900/60 transition-colors text-xs font-medium border border-red-800/40 shrink-0"
           >
             Disconnect
           </button>
