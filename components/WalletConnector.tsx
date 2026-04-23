@@ -136,40 +136,48 @@ export default function WalletConnector() {
   // Not connected - show both options
   return (
     <div className="flex flex-col gap-3">
-      {connectors.filter(c => c.name === 'MetaMask' || c.id === 'injected').map((connector) => (
+
+
+      <div className="relative w-full">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white text-[9px] rounded-full uppercase tracking-widest font-bold shadow-lg border border-fuchsia-400/30 z-10">
+          Recommended
+        </span>
+        <button
+          onClick={handleCircleConnect}
+          disabled={circleLoading}
+          className="w-full px-4 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] gap-2 disabled:opacity-50"
+        >
+          {circleLoading ? (
+            <>
+              <Loader2 className="animate-spin" size={18} />
+              Creating Wallet...
+            </>
+          ) : (
+            <>
+              <Wallet size={18} />
+              Create Circle Wallet
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="relative flex py-1 items-center">
+        <div className="flex-grow border-t border-slate-800"></div>
+        <span className="flex-shrink-0 mx-4 text-slate-500 text-[10px] uppercase tracking-widest font-semibold">Or</span>
+        <div className="flex-grow border-t border-slate-800"></div>
+      </div>
+
+      {connectors.filter(c => c.name === 'MetaMask' || c.id === 'injected').slice(0, 1).map((connector) => (
         <button
           key={connector.uid}
           onClick={() => connect({ connector })}
-          className="px-4 py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] gap-2"
+          className="w-full px-4 py-3 bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-slate-300 rounded-xl flex items-center justify-center font-semibold transition-all gap-2 text-sm"
         >
-          <Wallet size={18} />
-          Connect {connector.name}
+          <Wallet size={16} className="text-slate-400" />
+          Connect MetaMask
         </button>
       ))}
 
-      <div className="relative flex py-2 items-center">
-        <div className="flex-grow border-t border-slate-700"></div>
-        <span className="flex-shrink-0 mx-4 text-slate-500 text-xs uppercase tracking-wider font-semibold">Or</span>
-        <div className="flex-grow border-t border-slate-700"></div>
-      </div>
-
-      <button
-        onClick={handleCircleConnect}
-        disabled={circleLoading}
-        className="px-4 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] gap-2 disabled:opacity-50"
-      >
-        {circleLoading ? (
-          <>
-            <Loader2 className="animate-spin" size={18} />
-            Creating Wallet...
-          </>
-        ) : (
-          <>
-            <Shield size={18} />
-            Create Circle Developer Wallet
-          </>
-        )}
-      </button>
 
       {circleError && (
         <div className="text-red-400 text-xs text-center bg-red-950/30 p-2 rounded-lg border border-red-900/50">
