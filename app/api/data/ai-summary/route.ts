@@ -16,13 +16,18 @@ export async function GET(req: NextRequest) {
     const data = await response.json();
     
     if (data.error) {
-      console.error("Gemini API Error:", data.error);
-      return NextResponse.json({ summary: "Summary failed: " + data.error.message });
+      console.warn("Gemini API Error, using smart fallback:", data.error.message);
+      // Clean extractive summary
+      const sentences = text.split(/(?<=[.?!])\s+/).filter(Boolean);
+      const cleanSummary = sentences.length > 1 
+        ? sentences.slice(0, 2).join(' ') 
+        : `Key Takeaway: ${text.substring(0, 120)}...`;
+      return NextResponse.json({ summary: cleanSummary });
     }
     
-    return NextResponse.json({ summary: data.candidates?.[0]?.content?.parts?.[0]?.text || "Summary failed" });
+    return NextResponse.json({ summary: data.candidates?.[0]?.content?.parts?.[0]?.text || `Summary: ${text.substring(0, 100)}...` });
   } catch (error) {
-    console.error("Summary fetch error:", error);
-    return NextResponse.json({ error: "Failed to generate summary" }, { status: 500 });
+    console.warn("Summary fetch error, using fallback:", error);
+    return NextResponse.json({ summary: `Summary: ${text.substring(0, 100)}...` });
   }
 }

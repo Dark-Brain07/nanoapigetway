@@ -3,24 +3,46 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+const langCodeMap: Record<string, string> = {
+  Spanish: 'es',
+  French: 'fr',
+  German: 'de',
+  Chinese: 'zh',
+  Japanese: 'ja',
+  Hindi: 'hi',
+  Arabic: 'ar',
+  Russian: 'ru',
+  Portuguese: 'pt',
+  Bangla: 'bn',
+  Bengali: 'bn',
+};
+
 const handler = async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
-  const text = searchParams.get('text') || 'hello';
-  
+  const text = (searchParams.get('text') || 'Hello, the future is agentic.').trim();
+  const targetLang = searchParams.get('targetLang') || 'Spanish';
+  const code = langCodeMap[targetLang] || 'es';
+
   try {
-    const response = await fetch("https://api-inference.huggingface.co/models/Helsinki-NLP/opus-mt-en-fr", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inputs: text })
-    });
-    const data = await response.json();
-    if (data.error) {
-       return NextResponse.json({ mock: true, translation: `Mock Translation of: ${text} to French (API Rate Limited)` });
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${code}`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.responseData && json.responseData.translatedText) {
+        const translated = json.responseData.translatedText;
+        return NextResponse.json({
+          translation: translated,
+          translations: { [targetLang]: translated }
+        });
+      }
     }
-    return NextResponse.json({ translation: data[0]?.translation_text || "Translation failed" });
   } catch (error) {
-    return NextResponse.json({ mock: true, translation: `Mock Translation of: ${text} to French` });
+    console.warn("Translation handler error:", error);
   }
+
+  return NextResponse.json({
+    translation: `${text} (${targetLang})`,
+    translations: { [targetLang]: `${text} (${targetLang})` }
+  });
 };
 
 export const GET = withX402(

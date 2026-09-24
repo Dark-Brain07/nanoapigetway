@@ -102,7 +102,14 @@ function ResultVisualizer({ endpoint, data }: { endpoint: string, data: any }) {
         </div>
       );
     case '/api/translate':
-      const translations = data.translations || {};
+      let translations = data.translations || {};
+      if (typeof translations === 'object' && Object.keys(translations).length === 0) {
+        if (data.translation) {
+          translations = { 'Translated': data.translation };
+        } else if (typeof data === 'string') {
+          translations = { 'Translated': data };
+        }
+      }
       const langs = Object.keys(translations);
       return (
         <div>
