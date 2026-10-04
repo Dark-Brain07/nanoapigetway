@@ -1,65 +1,26 @@
 'use client';
-import { useState, useEffect } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 
-interface CircleWalletData {
-  walletId: string;
-  address: string;
-}
-
 export default function UsdcBalance() {
-  const [circleBalance, setCircleBalance] = useState<string | null>(null);
-  const [isCircleWallet, setIsCircleWallet] = useState(false);
-  
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
+
+  let tokenAddress: `0x${string}` | undefined = undefined;
+  if (chain?.id === 84532) { // Base Sepolia
+    tokenAddress = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
+  } else if (chain?.id === 11155111) { // Eth Sepolia
+    tokenAddress = '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238';
+  }
+
   const { data: wagmiBalance } = useBalance({ 
     address,
+    token: tokenAddress,
     query: {
-      enabled: isConnected && !isCircleWallet,
+      enabled: isConnected,
       refetchInterval: 10000
     }
   });
 
-  useEffect(() => {
-    const fetchBalance = async () => {
-      const stored = localStorage.getItem('circleWallet');
-      if (!stored) { 
-        setIsCircleWallet(false);
-        setCircleBalance(null); 
-        return; 
-      }
-      
-      setIsCircleWallet(true);
-      try {
-        const wallet: CircleWalletData = JSON.parse(stored);
-        const res = await fetch(`/api/circle-wallet?walletId=${wallet.walletId}`);
-        const data = await res.json();
-        
-        if (data.balances && data.balances.length > 0) {
-          const usdc = data.balances.find((b: any) => b.token?.symbol === 'USDC') || data.balances[0];
-          setCircleBalance(usdc?.amount || '0');
-        } else {
-          setCircleBalance('0');
-        }
-      } catch {
-        setCircleBalance(null);
-      }
-    };
-
-    fetchBalance();
-    const interval = setInterval(fetchBalance, 10000);
-    window.addEventListener('circleWalletChanged', fetchBalance);
-    window.addEventListener('storage', fetchBalance);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('circleWalletChanged', fetchBalance);
-      window.removeEventListener('storage', fetchBalance);
-    };
-  }, []);
-
-  const displayBalance = isCircleWallet 
-    ? circleBalance 
-    : (isConnected && wagmiBalance ? wagmiBalance.formatted : null);
+  const displayBalance = isConnected && wagmiBalance ? wagmiBalance.formatted : null;
 
   if (displayBalance === null) return null;
 

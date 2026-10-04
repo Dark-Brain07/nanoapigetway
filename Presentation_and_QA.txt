@@ -1,0 +1,88 @@
+================================================================================
+                    NANOAPI GATEWAY — PITCH & Q&A CHEAT SHEET
+================================================================================
+Tagline: "Sub-cent AI APIs via x402 and Circle."
+Demo Video: https://drive.google.com/file/d/1wUxDrbbsze7W963OQWRlbuaginNOp-Zk/view?usp=sharing
+
+This document contains a ready-to-use Presentation Pitch Script and an exhaustive 
+Technical/Fundamental Q&A guide to help you present to developers, clients, and 
+stakeholders perfectly.
+
+================================================================================
+                       PART 1: PRESENTATION PITCH SCRIPT
+================================================================================
+
+SLIDE 1: TITLE & HOOK
+"Hello everyone. Today we are presenting NanoAPI Gateway — the infrastructure unlocking the sub-cent AI economy using the x402 protocol and Circle Developer Wallets on the Arc blockchain."
+
+SLIDE 2: THE PROBLEM (THE MONETIZATION DEAD-END)
+"Right now, developers building valuable, bite-sized AI endpoints face an economic dead end. If you want to charge $0.001 per API call, traditional payment rails like Stripe are impossible because of their flat $0.30 fee floor. On traditional Web3 mainnets like Ethereum L1, gas fees can be hundreds or thousands of times more expensive than the actual service call. Consequently, businesses are forced to lock users into high-friction $50 to $500 monthly subscriptions, leaving vast amounts of usage unmonetized."
+
+SLIDE 3: THE SOLUTION
+"NanoAPI Gateway solves this by enabling frictionless sub-cent micro-transactions settled instantly in stable USDC. By running natively on the Arc Testnet, gas fees drop to a fraction of a cent (~$0.000001). We combine this near-zero settlement cost with the x402 protocol—wrapping the standard HTTP '402 Payment Required' response code into an autonomous, programmatic payment flow."
+
+SLIDE 4: THE USER EXPERIENCE (FRICTIONLESS ONBOARDING)
+"Traditional Web3 dApps suffer from terrible conversion rates because users must install browser extensions, manage seed phrases, and manually sign popups for every transaction. Using Circle's Developer-Controlled Wallets SDK, we generate secure, on-chain Externally Owned Accounts (EOAs) seamlessly in the background with a single click. Users top up via the Circle Faucet, and from then on, API calls are authorized and paid automatically in under 2 seconds."
+
+SLIDE 5: AUTONOMOUS AGENT DEMO & SCALABILITY
+"To prove the performance of our infrastructure, we built an Autonomous Agent Demo Mode. With one action, our audience can watch the agent autonomously generate 50+ real, verifiable on-chain micro-transactions on the Arc network. This proves that both the network and the Circle infrastructure can sustain the high-frequency throughput required for real-time commerce."
+
+SLIDE 6: THE FUTURE (A2A ECONOMIES)
+"While our interface allows humans to easily buy sub-cent data, the ultimate vision is Agent-to-Agent (A2A) economies. When an AI agent can programmatically discover an endpoint, receive an HTTP 402 challenge, auto-settle $0.001 USDC on Arc, and consume the payload completely autonomously, software development changes forever. NanoAPI Gateway is building the rails for that future."
+
+
+================================================================================
+                     PART 2: EXHAUSTIVE Q&A (CHEAT SHEET)
+================================================================================
+
+--------------------------------------------------------------------------------
+A. FUNDAMENTAL & BUSINESS QUESTIONS
+--------------------------------------------------------------------------------
+
+Q1: Why not just use Stripe or credit cards?
+Answer: Economics. Stripe charges $0.30 + 2.9% per transaction. If our API call costs $0.001, the payment processor's fee is 300x larger than our revenue. Even with transaction batching, credit card rails introduce chargeback risks, global currency conversion friction, and delayed settlement. USDC on Arc settles instantly for a micro-fraction of a cent.
+
+Q2: Why build on the Arc blockchain instead of other L2s/L1s?
+Answer: Arc provides the ultra-low latency and hyper-optimized block space necessary for true programmatic micropayments. Gas costs on Arc drop to ~$0.000001, meaning charging $0.001 yields a 99.9% profit margin on the network layer. Furthermore, native integration with Circle stablecoin tooling ensures robust enterprise-grade liquidity.
+
+Q3: How do developers make money charging only $0.001?
+Answer: High frequency and scale. AI inference and specialized small-task APIs (summarization, localized weather, translation queries) are called millions of times a day by automated pipelines and agents. A pay-as-you-go model drastically expands the top-of-funnel user base by removing subscription paywalls, driving massive aggregate volume.
+
+Q4: Do you plan to launch your own native token?
+Answer: No. Launching a volatile custom token introduces unnecessary friction, cognitive load, and accounting headaches for enterprise consumers. By utilizing USDC as our core native currency, we guarantee stable, predictable pricing where an API call costs exactly the same today as it will next year.
+
+--------------------------------------------------------------------------------
+B. TECHNICAL & ARCHITECTURAL QUESTIONS
+--------------------------------------------------------------------------------
+
+Q5: Explain exactly how the x402 protocol integration works under the hood.
+Answer: It is a 4-step flow:
+1. Challenge: The client requests a protected endpoint (e.g., `/api/weather`). The server intercepts this and responds with an HTTP status code `402 Payment Required`, returning a JSON payload specifying the price ($0.001 USDC) and the receiver's address (`payTo`).
+2. Payment: The client catches the 402 response. Using the Circle Developer Wallets SDK (or injected Web3 provider), it triggers an on-chain transfer of the requested USDC amount to the receiver's address on the Arc Testnet.
+3. Verification: Once the transaction confirms, we obtain a unique transaction hash (`txHash`).
+4. Data Access: The client automatically queries an internal data-mirror endpoint, logging the verified transaction hash, and receives the raw service data alongside cryptographic proof of payment.
+
+Q6: How does the wallet generation work without requiring browser extensions?
+Answer: We integrate the `@circle-fin/developer-controlled-wallets` SDK. When a user clicks 'Create Wallet', our backend securely calls Circle's API using our entity secret and API keys. Circle generates an untraceable, secure EOA wallet set tied programmatically to the user's session ID. The user doesn't manage private keys; Circle acts as the secure multi-party computation (MPC) custodian.
+
+Q7: On Arc Testnet, how is gas paid for these developer-controlled wallets?
+Answer: On the Arc Testnet configuration, native token transfers handle gas natively. Because gas fees are astronomically low, users simply need a minor top-up of testnet USDC from the Circle Faucet to cover hundreds of consecutive API calls smoothly.
+
+Q8: What happens if a transaction fails or gets stuck during execution?
+Answer: Our backend polling architecture checks transaction states programmatically. When a transfer is initiated via `circleSDK.createTransaction`, we capture the Circle Transaction ID. We poll `circleSDK.getTransaction` every 2 seconds for up to 30 seconds. If the status returns 'FAILED', 'DENIED', or times out, the client safely rolls back the API call and displays a clear error without consuming user funds.
+
+Q9: How do you prevent users from bypassing the gateway and hitting the underlying API directly?
+Answer: In production, backend endpoints are strictly segmented. The public gateway routes verify transaction completion logs or require pre-signed authorization tokens before relaying requests to the protected internal microservices (represented by our `DATA_MIRROR` routing logic).
+
+Q10: Explain the purpose of the Circle Gateway Bridge component shown in the dashboard.
+Answer: The Gateway Bridge is currently a frontend concept demonstrating our roadmap for cross-chain interoperability. In the future, we plan to fully integrate Circle's Cross-Chain Transfer Protocol (CCTP) so developers can seamlessly bridge their existing USDC liquidity from Ethereum, Base, or Polygon directly onto the Arc network to fund high-frequency API consumption.
+
+--------------------------------------------------------------------------------
+C. PRODUCTION READINESS & FUTURE ROADMAP
+--------------------------------------------------------------------------------
+
+Q11: How confident are you deploying this to mainnet today, and what would you change?
+Answer: We rate our confidence at a solid 4 out of 5 because the underlying key management relies on Circle's highly vetted enterprise infrastructure. To achieve a perfect 5 for high-value mainnet deployment, we will configure strict Agent Wallet Spending Policies (such as per-transaction transfer caps and daily volume limits) to prevent run-away agent spending, and implement hardened JWT-based server-side session management.
+
+Q12: What is the single biggest onboarding improvement you want to build next?
+Answer: Gasless/Automated Pre-funding. Currently, users must visit an external faucet to fund their newly created Circle wallet. Our next priority is implementing a native 'Welcome Drip' where our developer entity wallet automatically seeds brand new accounts with $0.01 USDC upon creation, making the path from discovery to first paid API call 100% instant and self-contained.

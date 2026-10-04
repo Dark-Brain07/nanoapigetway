@@ -1,189 +1,138 @@
 'use client';
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ARC_TESTNET } from '../lib/arcConfig';
-import { Wallet, Shield, Loader2, ExternalLink, Copy } from 'lucide-react';
+import { Wallet, Loader2, ExternalLink, X } from 'lucide-react';
 
-interface CircleWalletData {
-  walletId: string;
-  address: string;
+interface WalletConnectorProps {
+  variant?: 'navbar' | 'card';
 }
 
-export default function WalletConnector() {
-  const { address, isConnected } = useAccount();
+export default function WalletConnector({ variant = 'card' }: WalletConnectorProps = {}) {
+  const { address, isConnected, connector: activeConnector } = useAccount();
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const { data: balance } = useBalance({ address, chainId: ARC_TESTNET.id });
 
-  const [circleWallet, setCircleWallet] = useState<CircleWalletData | null>(null);
-  const [circleLoading, setCircleLoading] = useState(false);
-  const [circleError, setCircleError] = useState('');
-  const [isDestroying, setIsDestroying] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Load Circle wallet from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem('circleWallet');
-    if (stored) {
-      try {
-        setCircleWallet(JSON.parse(stored));
-      } catch {}
-    }
+    setMounted(true);
   }, []);
 
-  const handleCircleConnect = async () => {
-    setCircleLoading(true);
-    setCircleError('');
-    try {
-      const res = await fetch('/api/circle-wallet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 'NanoAPI_User_' + Date.now() }),
-      });
-      const data = await res.json();
-      if (data.wallet?.address && data.wallet?.id) {
-        const walletData: CircleWalletData = {
-          walletId: data.wallet.id,
-          address: data.wallet.address,
-        };
-        setCircleWallet(walletData);
-        localStorage.setItem('circleWallet', JSON.stringify(walletData));
-        // Dispatch event so ApiCards can pick it up immediately
-        window.dispatchEvent(new Event('circleWalletChanged'));
-      } else {
-        setCircleError('Wallet creation returned no address. Check Circle API key.');
-      }
-    } catch (e) {
-      console.error(e);
-      setCircleError('Failed to create Circle wallet.');
-    }
-    setCircleLoading(false);
-  };
-
-  const handleCircleDisconnect = () => {
-    setIsDestroying(true);
-    setTimeout(() => {
-      setCircleWallet(null);
-      localStorage.removeItem('circleWallet');
-      window.dispatchEvent(new Event('circleWalletChanged'));
-      setIsDestroying(false);
-    }, 400);
-  };
-
-  // Circle Developer Wallet connected state
-  if (circleWallet) {
-    return (
-      <div className="relative p-5 bg-black rounded-xl border border-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_10px_40px_-10px_rgba(0,0,0,0.8)] overflow-hidden group/wallet">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent opacity-50"></div>
-        <div className="absolute -left-20 -top-20 w-40 h-40 bg-cyan-500/10 blur-[50px] pointer-events-none"></div>
-
-        <div className="relative z-10 flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-slate-300 text-xs font-bold uppercase tracking-widest">
-            <Shield size={14} className="text-cyan-400" />
-            Circle Dev Wallet
-          </div>
-          <button
-            onClick={handleCircleDisconnect}
-            disabled={isDestroying}
-            className={`px-3 py-1.5 rounded transition-all duration-300 text-[10px] uppercase tracking-wider
-              ${isDestroying ? 'opacity-0 scale-150 blur-md grayscale tracking-[0.5em] rotate-3' : 'bg-red-950/30 text-red-400 border border-red-900/50 font-bold hover:scale-110 hover:bg-red-900/50 hover:text-red-300 hover:border-red-500/50 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:font-black'}`}
-          >
-            Disconnect
-          </button>
-        </div>
-        
-        <div className="relative z-10 flex flex-col gap-2">
-          <div className="flex items-center justify-between bg-[#09090b] px-3 py-2.5 rounded-lg border border-slate-800 shadow-inner group-hover/wallet:border-slate-700 transition-colors">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-0.5">Address</span>
-              <span className="font-mono text-cyan-400 text-xs truncate max-w-[180px] sm:max-w-[220px]" title={circleWallet.address}>{circleWallet.address.slice(0, 6)}...{circleWallet.address.slice(-6)}</span>
-            </div>
-            <button 
-              onClick={() => navigator.clipboard.writeText(circleWallet.address)}
-              className="text-slate-500 hover:text-cyan-400 transition-colors p-1.5 rounded-md hover:bg-slate-800 border border-transparent hover:border-slate-700"
-              title="Copy Address"
-            >
-              <Copy size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // MetaMask connected state
+  // External Wallet connected state
   if (isConnected) {
-    return (
-      <div className="p-5 bg-gradient-to-br from-cyan-950/40 to-slate-900 rounded-xl border border-cyan-500/20 shadow-lg">
-        <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-widest mb-3">
-          <Wallet size={14} />
-          MetaMask Connected
-        </div>
-        <div className="flex justify-between items-center gap-3">
-          <div className="flex flex-col gap-1.5 min-w-0 flex-1">
-            <span className="font-mono text-cyan-400 text-xs truncate" title={address}>{address?.slice(0, 6)}...{address?.slice(-6)}</span>
+    if (variant === 'navbar') {
+      return (
+        <div className="flex items-center gap-2">
+          <div className="bg-slate-900 border border-slate-700/80 px-3 py-1.5 rounded-xl shadow-inner flex items-center gap-2 h-[34px]">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+            <span className="font-mono text-cyan-400 text-[11px] sm:text-xs tracking-wide">
+              {address?.slice(0, 6)}...{address?.slice(-4)}
+            </span>
           </div>
           <button
             onClick={() => disconnect()}
-            className="px-3 py-1.5 bg-red-900/40 text-red-400 rounded-lg hover:bg-red-900/60 transition-colors text-xs font-medium border border-red-800/40 shrink-0"
+            className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-red-100 bg-gradient-to-b from-red-600 to-red-800 px-3 py-1.5 rounded-xl border border-red-500/50 shadow-[0_4px_0_rgb(153,27,27)] hover:from-red-500 hover:to-red-700 hover:shadow-[0_4px_0_rgb(153,27,27),0_0_10px_rgba(239,68,68,0.4)] active:translate-y-[4px] active:shadow-[0_0_0_rgb(153,27,27)] transition-all tracking-wide h-[34px]"
           >
             Disconnect
           </button>
         </div>
-      </div>
-    );
+      );
+    } else {
+      return (
+        <div className="p-5 bg-gradient-to-br from-cyan-950/40 to-slate-900 rounded-xl border border-cyan-500/20 shadow-lg">
+          <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-widest mb-3">
+            <Wallet size={14} />
+            {activeConnector?.name || 'Wallet'} Connected
+          </div>
+          <div className="flex justify-between items-center gap-3">
+            <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+              <span className="font-mono text-cyan-400 text-xs truncate" title={address}>{address?.slice(0, 6)}...{address?.slice(-6)}</span>
+            </div>
+            <button
+              onClick={() => disconnect()}
+              className="px-3 py-1.5 bg-red-900/40 text-red-400 rounded-lg hover:bg-red-900/60 transition-colors text-xs font-medium border border-red-800/40 shrink-0"
+            >
+              Disconnect
+            </button>
+          </div>
+        </div>
+      );
+    }
   }
 
-  // Not connected - show both options
+  // Not connected
   return (
     <div className="flex flex-col gap-3">
 
-
-      <div className="relative w-full">
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-[9px] rounded-full uppercase tracking-widest font-bold shadow-lg border border-cyan-400/30 z-10">
-          Recommended
-        </span>
+      {variant === 'navbar' ? (
         <button
-          onClick={handleCircleConnect}
-          disabled={circleLoading}
-          className="w-full px-4 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] gap-2 disabled:opacity-50"
+          onClick={() => setIsWalletModalOpen(true)}
+          className="inline-flex items-center gap-1.5 text-xs font-black text-white bg-gradient-to-b from-purple-500 to-purple-700 px-4 py-1.5 rounded-xl border border-purple-400/50 shadow-[0_4px_0_rgb(126,34,206)] hover:from-purple-400 hover:to-purple-600 hover:shadow-[0_4px_0_rgb(126,34,206),0_0_15px_rgba(168,85,247,0.5)] active:translate-y-[4px] active:shadow-[0_0_0_rgb(126,34,206)] transition-all tracking-wide h-[34px]"
         >
-          {circleLoading ? (
-            <>
-              <Loader2 className="animate-spin" size={18} />
-              Creating Wallet...
-            </>
-          ) : (
-            <>
-              <Wallet size={18} />
-              Create Circle Wallet
-            </>
-          )}
+          <Wallet size={14} className="text-white shrink-0" />
+          Connect Wallet
         </button>
-      </div>
-
-      <div className="relative flex py-1 items-center">
-        <div className="flex-grow border-t border-slate-800"></div>
-        <span className="flex-shrink-0 mx-4 text-slate-500 text-[10px] uppercase tracking-widest font-semibold">Or</span>
-        <div className="flex-grow border-t border-slate-800"></div>
-      </div>
-
-      {connectors.filter(c => c.name === 'MetaMask' || c.id === 'injected').slice(0, 1).map((connector) => (
+      ) : (
         <button
-          key={connector.uid}
-          onClick={() => connect({ connector })}
+          onClick={() => setIsWalletModalOpen(true)}
           className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl flex items-center justify-center font-bold transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] gap-2 text-sm"
         >
           <Wallet size={16} className="text-white" />
-          Connect MetaMask
+          Connect Wallet
         </button>
-      ))}
-
-
-      {circleError && (
-        <div className="text-red-400 text-xs text-center bg-red-950/30 p-2 rounded-lg border border-red-900/50">
-          {circleError}
-        </div>
       )}
+
+      {isWalletModalOpen && mounted && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-[100dvh] z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] pointer-events-none"></div>
+
+            <div className="flex justify-between items-center mb-6 relative z-10">
+              <h3 className="text-lg font-bold text-white tracking-tight">Connect Wallet</h3>
+              <button 
+                onClick={() => setIsWalletModalOpen(false)}
+                className="text-slate-500 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3 relative z-10 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+              {connectors.filter((v, i, a) => a.findIndex(t => (t.name === v.name)) === i).map((connector) => (
+                <button
+                  key={connector.uid}
+                  onClick={() => {
+                    connect({ connector });
+                    setIsWalletModalOpen(false);
+                  }}
+                  className="flex items-center gap-4 w-full p-4 rounded-xl bg-black/50 border border-slate-800 hover:border-slate-600 hover:bg-slate-800/50 transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-800 flex items-center justify-center border border-slate-700 shrink-0 p-1">
+                    {connector.icon ? (
+                       <img src={connector.icon} alt={connector.name} className="w-full h-full object-contain" />
+                    ) : (
+                       <Wallet size={20} className="text-slate-400 group-hover:text-white" />
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col items-start">
+                    <span className="font-bold text-slate-200 group-hover:text-white">{connector.name}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">Browser Extension</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            
+          </div>
+        </div>,
+        document.body
+      )}
+
+
     </div>
   );
 }

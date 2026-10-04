@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useSendTransaction, useAccount } from 'wagmi';
+import { useSendTransaction, useAccount, useSwitchChain } from 'wagmi';
 import { parseEther } from 'viem';
-import { CloudSun, Newspaper, Activity, Sparkles, Globe, CheckCircle2, ArrowRight, Shield } from 'lucide-react';
+import { CloudSun, Newspaper, Activity, Sparkles, Globe, CheckCircle2, ArrowRight, Shield, Coins, ShieldAlert, ShieldCheck, Database, Users } from 'lucide-react';
 
 // Map protected endpoints to their unprotected data mirrors
 const DATA_MIRROR: Record<string, string> = {
@@ -11,12 +11,8 @@ const DATA_MIRROR: Record<string, string> = {
   '/api/crypto-price': '/api/data/crypto-price',
   '/api/ai-summary': '/api/data/ai-summary',
   '/api/translate': '/api/data/translate',
+  '/api/token-info': '/api/data/token-info',
 };
-
-interface CircleWalletData {
-  walletId: string;
-  address: string;
-}
 
 function ResultVisualizer({ endpoint, data }: { endpoint: string, data: any }) {
   if (data.error) {
@@ -141,6 +137,77 @@ function ResultVisualizer({ endpoint, data }: { endpoint: string, data: any }) {
            </div>
         </div>
       );
+    case '/api/token-info':
+      const totalSupplyFmt = data.totalSupply 
+        ? (parseFloat(data.totalSupply) / Math.pow(10, data.decimals)).toLocaleString(undefined, { maximumFractionDigits: 2 }) 
+        : 'Unknown';
+      return (
+        <div className="flex flex-col gap-4 relative">
+           {/* Top Section - Like Weather */}
+           <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
+              <div className="flex items-center gap-4">
+                 <div className="bg-gradient-to-br from-purple-500/20 to-fuchsia-500/20 p-3 rounded-full text-fuchsia-400 shadow-[0_0_20px_rgba(217,70,239,0.15)] border border-fuchsia-500/20">
+                   <Coins size={28} />
+                 </div>
+                 <div>
+                    <h4 className="text-xl font-bold text-slate-100">{data.name}</h4>
+                    <p className="text-slate-400 text-sm mt-0.5 tracking-widest">{data.symbol}</p>
+                 </div>
+              </div>
+              <div className="text-right">
+                 <div className="text-xl font-bold text-white tracking-tight">
+                   {data.holders} <span className="text-sm font-light text-slate-400">Holders</span>
+                 </div>
+                 <div className="text-[10px] uppercase tracking-widest text-fuchsia-500/70 font-semibold mt-1">Total Supply: {totalSupplyFmt}</div>
+              </div>
+           </div>
+
+           {/* Middle Section - Badges */}
+           <div className="flex flex-wrap gap-2">
+              <div className="flex-1 min-w-[140px] bg-slate-900/50 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-center shadow-inner">
+                 <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Database size={12}/> Creator</span>
+                 {data.creator && data.creator !== 'Unknown' ? (
+                   <a href={`https://testnet.arcscan.app/address/${data.creator}`} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:text-cyan-300 truncate font-mono block max-w-[120px]" title={data.creator}>
+                      {data.creator.slice(0,6)}...{data.creator.slice(-4)}
+                   </a>
+                 ) : (
+                   <span className="text-xs text-slate-400 font-mono italic">System Contract</span>
+                 )}
+              </div>
+              <div className={`flex-1 min-w-[140px] border rounded-xl p-3 flex items-center gap-2 shadow-inner ${data.isVerified ? 'bg-emerald-950/20 border-emerald-900/50 text-emerald-400' : 'bg-red-950/20 border-red-900/50 text-red-400'}`}>
+                 {data.isVerified ? <ShieldCheck size={20} /> : <ShieldAlert size={20} />}
+                 <div className="flex flex-col">
+                    <span className="text-[10px] uppercase tracking-widest opacity-80">Security</span>
+                    <span className="text-sm font-bold tracking-tight">{data.honeypotStatus}</span>
+                 </div>
+              </div>
+           </div>
+
+           {/* Bottom Section - Top Holders */}
+           <div className="bg-slate-900/50 border border-slate-700/80 rounded-xl p-3 shadow-inner">
+              <div className="flex items-center gap-2 text-slate-400 mb-2 font-semibold text-xs tracking-wide uppercase">
+                <Users size={14} /> Top 3 Holders
+              </div>
+              <div className="space-y-2 max-h-[120px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 pr-1">
+                 {data.topHolders?.length > 0 ? data.topHolders.map((holder: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
+                       <div className="flex items-center gap-2">
+                         <span className="text-xs font-bold text-slate-500">#{idx + 1}</span>
+                         <a href={`https://testnet.arcscan.app/address/${holder.address}`} target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-300 font-mono text-[10px] truncate w-24 sm:w-32">
+                           {holder.address}
+                         </a>
+                       </div>
+                       <div className="text-xs text-slate-200 font-bold whitespace-nowrap">
+                         {(parseFloat(holder.value) / Math.pow(10, data.decimals)).toLocaleString(undefined, { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-500">{data.symbol}</span>
+                       </div>
+                    </div>
+                 )) : (
+                    <div className="text-xs text-slate-500 text-center py-2">No holders found</div>
+                 )}
+              </div>
+           </div>
+        </div>
+      );
     default:
       return (
          <pre className="text-xs text-slate-400 overflow-x-auto font-mono scrollbar-thin scrollbar-thumb-slate-700 max-h-32">
@@ -156,28 +223,10 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const { sendTransactionAsync } = useSendTransaction();
-  const { address } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+  const { address, chain } = useAccount();
 
-  // Listen for Circle wallet from localStorage
-  const [circleWallet, setCircleWallet] = useState<CircleWalletData | null>(null);
 
-  useEffect(() => {
-    const load = () => {
-      const stored = localStorage.getItem('circleWallet');
-      if (stored) {
-        try { setCircleWallet(JSON.parse(stored)); } catch { setCircleWallet(null); }
-      } else {
-        setCircleWallet(null);
-      }
-    };
-    load();
-    window.addEventListener('circleWalletChanged', load);
-    window.addEventListener('storage', load);
-    return () => {
-      window.removeEventListener('circleWalletChanged', load);
-      window.removeEventListener('storage', load);
-    };
-  }, []);
 
   const handleCall = async () => {
     setLoading(true);
@@ -195,50 +244,47 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
 
       if (challengeRes.status === 402 || challengeData.error) {
         const numericPrice = price.replace('$', '');
+        const requestedNetwork = challengeData.accepts?.[0]?.network || 'arc-testnet';
+        const targetChainId = requestedNetwork === 'base-sepolia' ? 84532 : 5042002;
 
-        // ---- CIRCLE DEVELOPER WALLET PATH ----
-        if (circleWallet) {
+        if (address) {
+          // TRY GATEWAY BALANCE FIRST (Gasless)
           try {
-            const transferRes = await fetch('/api/circle-wallet/transfer', {
+            const deductRes = await fetch('/api/onramp', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                walletId: circleWallet.walletId,
-                destination: payTo,
+                action: 'deduct_unified_balance',
                 amount: numericPrice,
-              }),
+                walletAddress: address
+              })
             });
-            const transferData = await transferRes.json();
 
-            if (transferData.success && transferData.txHash) {
-              txHash = transferData.txHash;
+            const deductData = await deductRes.json();
+            
+            if (deductRes.ok && deductData.status === 'SUCCESS') {
+              console.log('Paid using Unified Gateway Balance!');
+              txHash = 'GATEWAY_PAYMENT_SUCCESS'; // Virtual txHash
             } else {
-              setResult({ error: transferData.error || 'Circle transaction failed' });
-              setLoading(false);
-              return;
+              // FALLBACK TO METAMASK ON-CHAIN PAYMENT
+              if (chain?.id !== targetChainId) {
+                await switchChainAsync({ chainId: targetChainId });
+              }
+
+              txHash = await sendTransactionAsync({
+                to: payTo as `0x${string}`,
+                value: parseEther(numericPrice),
+                chainId: targetChainId,
+              });
             }
           } catch (err: any) {
-            console.error("Circle transfer error:", err);
-            setResult({ error: 'Circle wallet transfer failed' });
-            setLoading(false);
-            return;
-          }
-        }
-        // ---- METAMASK / WAGMI PATH ----
-        else if (address) {
-          try {
-            txHash = await sendTransactionAsync({
-              to: payTo as `0x${string}`,
-              value: parseEther(numericPrice),
-            });
-          } catch (err: any) {
             console.log("Transaction rejected or failed", err);
-            setResult({ error: 'Transaction rejected by wallet' });
+            setResult({ error: 'Transaction rejected by wallet or gateway failed' });
             setLoading(false);
             return;
           }
         } else {
-          setResult({ error: 'Please connect a wallet first (MetaMask or Circle)' });
+          setResult({ error: 'Please connect a wallet first' });
           setLoading(false);
           return;
         }
@@ -256,7 +302,7 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
             txHash: txHash,
             amount: numericPrice + ' USDC',
             endpoint: endpoint,
-            walletAddress: circleWallet?.address || address,
+            walletAddress: address,
           })
         });
 
@@ -266,7 +312,7 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
             paid: true,
             txHash,
             network: 'arc-testnet',
-            paidVia: circleWallet ? 'circle' : 'metamask',
+            paidVia: 'metamask',
           },
         });
       } else {
@@ -280,7 +326,7 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
     setLoading(false);
   };
 
-  const isCircleMode = !!circleWallet;
+
 
   return (
     <div className="bg-slate-900/60 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-slate-700/50 hover:border-cyan-500/40 transition-all duration-300 group shadow-2xl flex flex-col">
@@ -312,19 +358,11 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
         <button
           onClick={handleCall}
           disabled={loading}
-          className={`${
-            isCircleMode
-              ? 'bg-gradient-to-b from-purple-400 via-purple-600 to-purple-800 border-purple-900 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),inset_0_-10px_20px_rgba(0,0,0,0.4),0_5px_15px_rgba(0,0,0,0.5)] hover:brightness-110 active:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.5)]'
-              : 'bg-gradient-to-b from-cyan-300 via-blue-500 to-blue-800 border-blue-900 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),inset_0_-10px_20px_rgba(0,0,0,0.4),0_5px_15px_rgba(0,0,0,0.5)] hover:brightness-110 active:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.5)]'
-          } relative overflow-hidden text-white border px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px] sm:min-w-[130px] transform hover:-translate-y-px active:translate-y-[2px] w-full sm:w-auto before:absolute before:top-0 before:left-[5%] before:right-[5%] before:h-[45%] before:bg-gradient-to-b before:from-white/70 before:to-white/10 before:rounded-b-[100px] before:pointer-events-none drop-shadow-xl text-shadow-sm`}
+          className="bg-gradient-to-b from-cyan-300 via-blue-500 to-blue-800 border-blue-900 shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),inset_0_-10px_20px_rgba(0,0,0,0.4),0_5px_15px_rgba(0,0,0,0.5)] hover:brightness-110 active:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.5)] relative overflow-hidden text-white border px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px] sm:min-w-[130px] transform hover:-translate-y-px active:translate-y-[2px] w-full sm:w-auto before:absolute before:top-0 before:left-[5%] before:right-[5%] before:h-[45%] before:bg-gradient-to-b before:from-white/70 before:to-white/10 before:rounded-b-[100px] before:pointer-events-none drop-shadow-xl text-shadow-sm"
         >
           {loading ? (
             <div className="flex items-center gap-2">
               <Activity className="animate-spin" size={16} /> Paying
-            </div>
-          ) : isCircleMode ? (
-            <div className="flex items-center gap-2">
-              <Shield size={16} /> Auto-Pay
             </div>
           ) : (
             'Call API →'
@@ -345,20 +383,20 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
                </div>
 
                {result._x402 && (
-                 <div className={`${
-                   result._x402.paidVia === 'circle'
-                     ? 'bg-gradient-to-r from-purple-950/60 to-fuchsia-900/40 border-t border-purple-900/40'
-                     : 'bg-gradient-to-r from-emerald-950/60 to-teal-900/40 border-t border-emerald-900/40'
-                 } px-3 sm:px-5 py-3 sm:py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2`}>
-                    <div className={`flex items-center gap-2 ${
-                      result._x402.paidVia === 'circle' ? 'text-purple-400' : 'text-emerald-400'
-                    } text-xs font-semibold tracking-wide uppercase`}>
-                       {result._x402.paidVia === 'circle' ? <Shield size={16} /> : <CheckCircle2 size={16} />}
-                       {result._x402.paidVia === 'circle' ? 'Paid via Circle Wallet' : 'Paid via ARC Network'}
+                 <div className="bg-gradient-to-r from-emerald-950/60 to-teal-900/40 border-t border-emerald-900/40 px-3 sm:px-5 py-3 sm:py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold tracking-wide uppercase">
+                       <CheckCircle2 size={16} />
+                       {result._x402.txHash === 'GATEWAY_PAYMENT_SUCCESS' ? 'Paid via Unified Gateway' : 'Paid via ARC Network'}
                     </div>
-                    <a href={`https://testnet.arcscan.app/tx/${result._x402.txHash}`} target="_blank" rel="noreferrer" className="text-cyan-400 bg-cyan-950/50 hover:bg-cyan-900/60 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all font-medium border border-cyan-800/50 hover:border-cyan-500/50">
-                      View Tx <ArrowRight size={12} />
-                    </a>
+                    {result._x402.txHash === 'GATEWAY_PAYMENT_SUCCESS' ? (
+                      <span className="text-emerald-400 bg-emerald-950/50 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 font-medium border border-emerald-800/50">
+                        [OFF-CHAIN CCTP]
+                      </span>
+                    ) : (
+                      <a href={`https://testnet.arcscan.app/tx/${result._x402.txHash}`} target="_blank" rel="noreferrer" className="text-cyan-400 bg-cyan-950/50 hover:bg-cyan-900/60 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all font-medium border border-cyan-800/50 hover:border-cyan-500/50">
+                        View Tx <ArrowRight size={12} />
+                      </a>
+                    )}
                  </div>
                )}
              </div>

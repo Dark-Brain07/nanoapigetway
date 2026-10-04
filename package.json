@@ -9,21 +9,23 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@circle-fin/adapter-viem-v2": "^1.18.0",
+    "@circle-fin/developer-controlled-wallets": "latest",
+    "@circle-fin/unified-balance-kit": "^1.7.0",
+    "@coinbase/x402": "latest",
     "@tanstack/react-query": "^5.99.1",
+    "@wagmi/connectors": "^5",
+    "@x402/core": "latest",
+    "@x402/evm": "latest",
+    "ethers": "^6",
+    "lucide-react": "latest",
     "next": "14.2.0",
     "react": "^18",
     "react-dom": "^18",
-    "ethers": "^6",
+    "recharts": "latest",
     "viem": "^2",
     "wagmi": "^2",
-    "@wagmi/connectors": "^5",
-    "x402-next": "latest",
-    "@coinbase/x402": "latest",
-    "@x402/core": "latest",
-    "@x402/evm": "latest",
-    "@circle-fin/developer-controlled-wallets": "latest",
-    "lucide-react": "latest",
-    "recharts": "latest"
+    "x402-next": "latest"
   },
   "devDependencies": {
     "@types/node": "^20",

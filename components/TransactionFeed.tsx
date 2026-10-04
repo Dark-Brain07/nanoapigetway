@@ -49,14 +49,20 @@ export default function TransactionFeed() {
                <div className="text-green-500 text-xs ml-4">FEE: {tx.amount} USDC</div>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <a 
-                href={`https://testnet.arcscan.app/tx/${tx.txHash}`} 
-                target="_blank" rel="noreferrer"
-                className="text-green-500 hover:text-green-300 hover:underline text-xs flex items-center gap-1 transition-colors"
-                title="View on ArcScan Explorer"
-              >
-                [0x{tx.txHash.slice(2,6)}...{tx.txHash.slice(-4)}] ↗
-              </a>
+              {tx.txHash === 'GATEWAY_PAYMENT_SUCCESS' ? (
+                <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-900/30 px-2 py-0.5 rounded" title="Paid via Unified Balance">
+                  [OFF-CHAIN CCTP] ✓
+                </span>
+              ) : (
+                <a 
+                  href={`https://testnet.arcscan.app/tx/${tx.txHash}`} 
+                  target="_blank" rel="noreferrer"
+                  className="text-green-500 hover:text-green-300 hover:underline text-xs flex items-center gap-1 transition-colors"
+                  title="View on ArcScan Explorer"
+                >
+                  [0x{tx.txHash.slice(2,6)}...{tx.txHash.slice(-4)}] ↗
+                </a>
+              )}
               <div className="text-green-700 text-xs">
                 {new Date(tx.timestamp).toLocaleTimeString()}
               </div>
