@@ -167,7 +167,7 @@ function ResultVisualizer({ endpoint, data }: { endpoint: string, data: any }) {
               <div className="flex-1 min-w-[140px] bg-slate-900/50 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-center shadow-inner">
                  <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Database size={12}/> Creator</span>
                  {data.creator && data.creator !== 'Unknown' ? (
-                   <a href={`https://testnet.arcscan.app/address/${data.creator}`} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:text-cyan-300 truncate font-mono block max-w-[120px]" title={data.creator}>
+                   <a href={`https://explorer.arc.io/address/${data.creator}`} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:text-cyan-300 truncate font-mono block max-w-[120px]" title={data.creator}>
                       {data.creator.slice(0,6)}...{data.creator.slice(-4)}
                    </a>
                  ) : (
@@ -193,7 +193,7 @@ function ResultVisualizer({ endpoint, data }: { endpoint: string, data: any }) {
                     <div key={idx} className="flex items-center justify-between bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
                        <div className="flex items-center gap-2">
                          <span className="text-xs font-bold text-slate-500">#{idx + 1}</span>
-                         <a href={`https://testnet.arcscan.app/address/${holder.address}`} target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-300 font-mono text-[10px] truncate w-24 sm:w-32">
+                         <a href={`https://explorer.arc.io/address/${holder.address}`} target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-300 font-mono text-[10px] truncate w-24 sm:w-32">
                            {holder.address}
                          </a>
                        </div>
@@ -244,8 +244,8 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
 
       if (challengeRes.status === 402 || challengeData.error) {
         const numericPrice = price.replace('$', '');
-        const requestedNetwork = challengeData.accepts?.[0]?.network || 'arc-testnet';
-        const targetChainId = requestedNetwork === 'base-sepolia' ? 84532 : 5042002;
+        const requestedNetwork = challengeData.accepts?.[0]?.network || 'arc-mainnet';
+        const targetChainId = requestedNetwork === 'base' ? 8453 : 5042;
 
         if (address) {
           // TRY GATEWAY BALANCE FIRST (Gasless)
@@ -311,7 +311,7 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
           _x402: {
             paid: true,
             txHash,
-            network: 'arc-testnet',
+            network: 'arc-mainnet',
             paidVia: 'metamask',
           },
         });
@@ -393,7 +393,7 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
                         [OFF-CHAIN CCTP]
                       </span>
                     ) : (
-                      <a href={`https://testnet.arcscan.app/tx/${result._x402.txHash}`} target="_blank" rel="noreferrer" className="text-cyan-400 bg-cyan-950/50 hover:bg-cyan-900/60 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all font-medium border border-cyan-800/50 hover:border-cyan-500/50">
+                      <a href={`https://explorer.arc.io/tx/${result._x402.txHash}`} target="_blank" rel="noreferrer" className="text-cyan-400 bg-cyan-950/50 hover:bg-cyan-900/60 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all font-medium border border-cyan-800/50 hover:border-cyan-500/50">
                         View Tx <ArrowRight size={12} />
                       </a>
                     )}

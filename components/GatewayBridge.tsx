@@ -46,7 +46,7 @@ export default function GatewayBridge() {
         </span>
         <div className="w-8 h-8 rounded-full bg-blue-900/50 flex items-center justify-center border border-blue-700/50 shadow-inner text-[10px]">CCTP</div>
       </h3>
-      <p className="text-slate-400 text-sm mb-6 relative">Seamlessly move USDC from testnets directly to Arc using Circle CCTP. <span className="text-amber-400/70 text-xs">(Demo Mode)</span></p>
+      <p className="text-slate-400 text-sm mb-6 relative">Seamlessly move USDC directly to Arc using Circle CCTP.</p>
 
       <div className="space-y-4 flex-1 flex flex-col justify-end relative">
         <div className="space-y-3 bg-slate-900/40 p-4 rounded-lg border border-slate-700/50 shadow-inner">
@@ -57,9 +57,9 @@ export default function GatewayBridge() {
               onChange={e => setSourceChain(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm"
             >
-              <option>Ethereum Sepolia</option>
-              <option>Base Sepolia</option>
-              <option>Polygon Amoy</option>
+              <option>Ethereum</option>
+              <option>Base</option>
+              <option>Polygon</option>
             </select>
           </div>
           
@@ -87,7 +87,7 @@ export default function GatewayBridge() {
               <span className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full"></span>
               Bridging...
             </>
-          ) : 'Bridge to Arc Testnet →'}
+          ) : 'Bridge to Arc Mainnet →'}
         </button>
 
         {result && (

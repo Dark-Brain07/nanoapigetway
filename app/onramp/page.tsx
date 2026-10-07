@@ -65,7 +65,7 @@ export default function OnrampPage() {
 
   // Funding Rails Mode
   const [fundingMode, setFundingMode] = useState<FundingMode>('unified_kit');
-  const [sourceChain, setSourceChain] = useState<string>('Base_Sepolia');
+  const [sourceChain, setSourceChain] = useState<string>('Base');
 
   // Amount State
   const [selectedPreset, setSelectedPreset] = useState<string>('25');
@@ -338,7 +338,7 @@ export default function OnrampPage() {
           amount: effectiveAmount,
           walletAddress: activeAddress,
           walletType,
-          network: 'base-sepolia',
+          network: 'base',
         }),
       });
 
@@ -485,7 +485,7 @@ export default function OnrampPage() {
 
               <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
                 <span>Active Network</span>
-                <span className="text-green-400 font-mono font-medium">Arc Testnet</span>
+                <span className="text-green-400 font-mono font-medium">Arc Mainnet</span>
               </div>
 
               {/* Circle Gateway Unified Balance Kit Breakdown */}
@@ -525,36 +525,6 @@ export default function OnrampPage() {
               <WalletConnector />
             </div>
 
-            {/* Developer Testnet Tool Box (Isolated from Production Flow) */}
-            <div className="bg-black/60 border border-slate-800/80 rounded-xl p-4 text-xs text-slate-400 space-y-2.5">
-              <div className="text-white font-bold flex items-center gap-1.5">
-                <Droplets size={13} className="text-cyan-400" />
-                <span>Developer Testnet Faucet</span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-slate-400">
-                Development-only testnet faucet. Requests free Arc Testnet USDC directly from Circle Web3 Faucet. (Separate from Unified Balance Kit).
-              </p>
-              <button
-                type="button"
-                onClick={handleDevFaucetRequest}
-                disabled={faucetLoading || !hasActiveWallet}
-                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg font-mono text-[11px] font-bold border border-slate-700 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40"
-              >
-                {faucetLoading ? (
-                  <>
-                    <Loader2 size={12} className="animate-spin" />
-                    Requesting Faucet...
-                  </>
-                ) : (
-                  'Request Dev Testnet USDC'
-                )}
-              </button>
-              {faucetMessage && (
-                <div className="text-[10px] text-cyan-400 font-mono mt-1 break-words">
-                  {faucetMessage}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Right Column: Real Add Funds Section */}
@@ -572,99 +542,87 @@ export default function OnrampPage() {
                 </p>
               </div>
 
-              {/* Rails Selection Tabs */}
-              <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-black/60 rounded-xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFundingMode('unified_kit');
-                    setPaymentState('IDLE');
-                    setStatusMessage('');
-                  }}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                    fundingMode === 'unified_kit'
-                      ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <Sparkles size={13} className="text-cyan-400" />
-                  Arc Unified Kit (Gateway)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFundingMode('fiat_onramp');
-                    setPaymentState(configInfo.fiatConfigured ? 'IDLE' : 'NOT_CONFIGURED');
-                    setStatusMessage('');
-                  }}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                    fundingMode === 'fiat_onramp'
-                      ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <CreditCard size={13} className="text-cyan-400" />
-                  Card / Bank Onramp
-                </button>
+              {/* Unified Balance Kit Explainer Notice */}
+              <div className="p-3.5 bg-cyan-950/30 border border-cyan-800/40 rounded-xl mb-6 text-xs text-cyan-200 space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-cyan-300">
+                  <Info size={14} />
+                  Official Circle Unified Balance Kit (Arc Domain 26)
+                </div>
+                <p className="text-[11px] text-cyan-300/80 leading-relaxed">
+                  Powered by <code className="bg-black/50 px-1 py-0.5 rounded text-cyan-300 font-mono">@circle-fin/unified-balance-kit</code>. Allows aggregating USDC across source chains (Base, Ethereum) and routing unified liquidity directly into Arc Mainnet.
+                </p>
               </div>
 
-              {/* Mode-Specific Explainer Notice */}
-              {fundingMode === 'unified_kit' ? (
-                <div className="p-3.5 bg-cyan-950/30 border border-cyan-800/40 rounded-xl mb-6 text-xs text-cyan-200 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5 text-cyan-300">
-                    <Info size={14} />
-                    Official Circle Unified Balance Kit (Arc Domain 26)
-                  </div>
-                  <p className="text-[11px] text-cyan-300/80 leading-relaxed">
-                    Powered by <code className="bg-black/50 px-1 py-0.5 rounded text-cyan-300 font-mono">@circle-fin/unified-balance-kit</code>. Allows aggregating USDC across source testnet chains (Base Sepolia, Ethereum Sepolia) and routing unified liquidity directly into Arc Testnet.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-3.5 bg-blue-950/30 border border-blue-800/40 rounded-xl mb-6 text-xs text-blue-200 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5 text-blue-300">
-                    <Info size={14} />
-                    Arc Testnet Settlement Routing
-                  </div>
-                  <p className="text-[11px] text-blue-300/80 leading-relaxed">
-                    Circle Fiat Onramp issues USDC directly onto supported production networks (Base, Ethereum, Polygon). Because Arc Testnet is a developer testnet, fiat card deposits settle on Base Sepolia and can be moved to Arc via <Link href="/dashboard" className="text-cyan-300 underline">Circle Gateway Bridge</Link>, or funded directly via the <strong>Developer Testnet Faucet</strong>.
-                  </p>
-                </div>
-              )}
-
-              {/* Source Chain Selector (if unified_kit) */}
-              {fundingMode === 'unified_kit' && (
-                <div className="space-y-2 mb-6">
+              {/* Source Chain Selector */}
+              <div className="space-y-2 mb-6">
                   <label className="block text-xs uppercase font-bold tracking-wider text-slate-400">
                     Source Chain Liquidity
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setSourceChain('Base_Sepolia')}
+                      onClick={() => setSourceChain('Base')}
                       className={`p-3 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Base_Sepolia'
+                        sourceChain === 'Base'
                           ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
                           : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="text-xs font-bold text-white">Base Sepolia</div>
+                      <div className="text-xs font-bold text-white">Base</div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 6</div>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSourceChain('Ethereum_Sepolia')}
+                      onClick={() => setSourceChain('Ethereum')}
                       className={`p-3 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Ethereum_Sepolia'
+                        sourceChain === 'Ethereum'
                           ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
                           : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="text-xs font-bold text-white">Ethereum Sepolia</div>
+                      <div className="text-xs font-bold text-white">Ethereum</div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 0</div>
                     </button>
                   </div>
+                  <div className="grid grid-cols-3 gap-3 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setSourceChain('Polygon')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        sourceChain === 'Polygon'
+                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
+                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-white">Polygon</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 7</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSourceChain('Arbitrum')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        sourceChain === 'Arbitrum'
+                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
+                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-white">Arbitrum</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 3</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSourceChain('Avalanche')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        sourceChain === 'Avalanche'
+                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
+                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-white">Avalanche</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 1</div>
+                    </button>
+                  </div>
                 </div>
-              )}
 
               {/* Amount Selection */}
               <div className="space-y-4 mb-6">
@@ -734,7 +692,7 @@ export default function OnrampPage() {
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-400">Payment Rails</span>
                   <span className="text-slate-300 font-medium">
-                    {fundingMode === 'unified_kit' ? 'Circle Unified Balance Kit (Arc Gateway Domain 26)' : 'Card / Bank (Circle Hosted Checkout)'}
+                    Circle Unified Balance Kit (Arc Gateway Domain 26)
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
@@ -771,19 +729,6 @@ export default function OnrampPage() {
                 </div>
               )}
 
-              {/* Not Configured Banner for Fiat mode */}
-              {fundingMode === 'fiat_onramp' && !configInfo.fiatConfigured && (
-                <div className="p-4 bg-amber-950/30 border border-amber-900/60 rounded-xl mb-6 text-xs text-amber-300 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5 text-amber-200">
-                    <AlertCircle size={14} />
-                    Circle Card Onramp is not configured yet.
-                  </div>
-                  <p className="text-[11px] text-amber-400/80 leading-relaxed">
-                    To enable live Circle card and bank checkout, configure <code className="bg-black/60 px-1 py-0.5 rounded text-amber-300 font-mono">CIRCLE_API_KEY</code> and <code className="bg-black/60 px-1 py-0.5 rounded text-amber-300 font-mono">NEXT_PUBLIC_CIRCLE_APP_ID</code> in <code className="bg-black/60 px-1 py-0.5 rounded text-amber-300 font-mono">.env.local</code>.
-                  </p>
-                </div>
-              )}
-
               {/* Primary Action Button */}
               <div>
                 {!hasActiveWallet ? (
@@ -794,7 +739,7 @@ export default function OnrampPage() {
                     <Wallet size={16} />
                     Connect your wallet to continue
                   </button>
-                ) : fundingMode === 'unified_kit' ? (
+                ) : (
                   <button
                     onClick={handleUnifiedKitDeposit}
                     disabled={paymentState === 'CREATING_SESSION' || Boolean(amountError)}
@@ -809,51 +754,6 @@ export default function OnrampPage() {
                       <>
                         <Sparkles size={16} />
                         Deposit ${parseFloat(effectiveAmount || '0').toFixed(2)} USDC to Arc Unified Balance
-                      </>
-                    )}
-                  </button>
-                ) : !configInfo.fiatConfigured ? (
-                  <button
-                    disabled
-                    className="w-full py-4 bg-slate-800/80 text-amber-400/70 font-bold rounded-xl text-sm border border-amber-900/40 flex items-center justify-center gap-2 cursor-not-allowed"
-                  >
-                    <AlertCircle size={16} />
-                    Circle Card Onramp is not configured yet
-                  </button>
-                ) : paymentState === 'CHECKOUT_READY' && checkoutUrl ? (
-                  <div className="space-y-3">
-                    <a
-                      href={checkoutUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={() => {
-                        setPaymentState('PENDING');
-                        setStatusMessage('Payment submitted. Waiting for funds to become available.');
-                      }}
-                      className="w-full py-4 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] flex items-center justify-center gap-2 text-center"
-                    >
-                      <ExternalLink size={16} />
-                      Open Circle Hosted Checkout ({effectiveAmount} USDC)
-                    </a>
-                    <p className="text-[11px] text-slate-500 text-center">
-                      * Checkout session creation does not guarantee payment completion. Funds will appear once settled.
-                    </p>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleStartOnramp}
-                    disabled={paymentState === 'CREATING_SESSION' || Boolean(amountError)}
-                    className="w-full py-4 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {paymentState === 'CREATING_SESSION' ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Creating Checkout Session...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard size={16} />
-                        Add ${parseFloat(effectiveAmount || '0').toFixed(2)} USDC via Circle Onramp
                       </>
                     )}
                   </button>

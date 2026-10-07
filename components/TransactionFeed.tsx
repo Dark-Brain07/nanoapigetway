@@ -30,7 +30,7 @@ export default function TransactionFeed() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
           </span>
-          root@arc-testnet:~#
+          root@arc-mainnet:~#
         </h3>
         <div className="border border-green-500/30 px-4 py-1.5 rounded-sm text-sm font-semibold flex items-center gap-2">
           <span className="text-green-400">[{count}]</span>
@@ -55,10 +55,10 @@ export default function TransactionFeed() {
                 </span>
               ) : (
                 <a 
-                  href={`https://testnet.arcscan.app/tx/${tx.txHash}`} 
+                  href={`https://explorer.arc.io/tx/${tx.txHash}`} 
                   target="_blank" rel="noreferrer"
                   className="text-green-500 hover:text-green-300 hover:underline text-xs flex items-center gap-1 transition-colors"
-                  title="View on ArcScan Explorer"
+                  title="View on Arc Explorer"
                 >
                   [0x{tx.txHash.slice(2,6)}...{tx.txHash.slice(-4)}] ↗
                 </a>

@@ -76,7 +76,7 @@ export default function Dashboard() {
                 title="Weather Info"
                 endpoint="/api/weather"
                 description="Real-time global weather parameters."
-                price="$1.000"
+                price="$0.001"
                 paramName="city"
                 defaultParam="Dhaka"
               />

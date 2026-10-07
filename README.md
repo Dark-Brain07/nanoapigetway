@@ -1,17 +1,17 @@
 # NanoAPI Gateway 🚀
 
-> "Pay only for what you use — sub-cent AI APIs on Arc Testnet"
+> "Pay only for what you use — sub-cent AI APIs on Arc Mainnet"
 
 ## 🌟 Problem Statement
 Traditional API monetization requires subscriptions ($50-$500/month) or payment processors ($0.30 + 2.9% per transaction). For sub-cent API calls, this makes business impossible.
 
 ## 💡 Solution
-NanoAPI Gateway charges **$0.001-$0.005 USDC per API call** using the x402 protocol natively. By settling instantly on the **Arc blockchain testnet**, gas fees drop to ~$0.000001, making micropayment APIs economically viable for the first time.
+NanoAPI Gateway charges **$0.001-$0.005 USDC per API call** using the x402 protocol natively. By settling instantly on the **Arc blockchain mainnet**, gas fees drop to ~$0.000001, making micropayment APIs economically viable for the first time.
 
 ---
 
 ## 🛠️ Circle Products Used
-- **Arc Testnet**: Fast settlement layer for all USDC micropayments.
+- **Arc Mainnet**: Fast settlement layer for all USDC micropayments.
 - **USDC**: Core native payment token.
 - **Circle Wallets (Developer-Controlled)**: Enables friction-less onboarding without requiring MetaMask.
 - **Circle Gateway / CCTP**: For bridging USDC from other chains.
@@ -48,8 +48,7 @@ The Demo Mode page generates **50+ on-chain transactions** autonomously and auto
    cp .env.example .env.local
    ```
 
-3. **Get Funds for Arc Testnet:**
-   Get free USDC via [Circle Faucet](https://faucet.circle.com).
+   Ensure you have USDC on your supported wallet to bridge.
 
 4. **Launch Application:**
    ```bash

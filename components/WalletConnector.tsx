@@ -2,7 +2,7 @@
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ARC_TESTNET } from '../lib/arcConfig';
+import { ARC_MAINNET } from '../lib/arcConfig';
 import { Wallet, Loader2, ExternalLink, X } from 'lucide-react';
 
 interface WalletConnectorProps {
@@ -14,7 +14,7 @@ export default function WalletConnector({ variant = 'card' }: WalletConnectorPro
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
-  const { data: balance } = useBalance({ address, chainId: ARC_TESTNET.id });
+  const { data: balance } = useBalance({ address, chainId: ARC_MAINNET.id });
 
   const [mounted, setMounted] = useState(false);
 

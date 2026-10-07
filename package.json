@@ -11,9 +11,11 @@
   "dependencies": {
     "@circle-fin/adapter-viem-v2": "^1.18.0",
     "@circle-fin/developer-controlled-wallets": "latest",
+    "@circle-fin/onramp-kit": "^1.0.3",
     "@circle-fin/unified-balance-kit": "^1.7.0",
     "@coinbase/x402": "latest",
     "@tanstack/react-query": "^5.99.1",
+    "@vercel/kv": "^3.0.0",
     "@wagmi/connectors": "^5",
     "@x402/core": "latest",
     "@x402/evm": "latest",

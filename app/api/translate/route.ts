@@ -50,7 +50,7 @@ export const GET = withX402(
   (process.env.PAYMENT_RECEIVER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   {
     price: '$0.003',
-    network: 'base-sepolia',
+    network: 'arc-mainnet',
     config: { description: 'AI text translation - 1 call' },
   }
 );

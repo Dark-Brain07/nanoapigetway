@@ -1,10 +1,10 @@
 import { createConfig, http } from 'wagmi';
 import { injected, metaMask } from 'wagmi/connectors';
-import { ARC_TESTNET } from './arcConfig';
-import { baseSepolia, sepolia } from 'viem/chains';
+import { ARC_MAINNET } from './arcConfig';
+import { base, mainnet } from 'viem/chains';
 
 export const config = createConfig({
-  chains: [ARC_TESTNET as any, baseSepolia, sepolia],
+  chains: [ARC_MAINNET as any, base, mainnet],
   connectors: [
     metaMask(),
     injected({ target: 'rabby' }),
@@ -12,8 +12,8 @@ export const config = createConfig({
     injected(),
   ],
   transports: {
-    [ARC_TESTNET.id]: http('https://rpc.testnet.arc.network'),
-    [baseSepolia.id]: http('https://sepolia.base.org'),
-    [sepolia.id]: http('https://ethereum-sepolia-rpc.publicnode.com'),
+    [ARC_MAINNET.id]: http('https://rpc.mainnet.arc.io'),
+    [base.id]: http(),
+    [mainnet.id]: http(),
   },
 });

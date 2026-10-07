@@ -45,7 +45,7 @@ export interface ArcUnifiedBalanceDetails {
  */
 export async function fetchArcUnifiedBalance(
   address: string,
-  chains: Blockchain[] = ['Arc_Testnet', 'Base_Sepolia', 'Ethereum_Sepolia'] as any
+  chains: Blockchain[] = ['Arc_Mainnet', 'Base', 'Ethereum'] as any
 ): Promise<ArcUnifiedBalanceDetails> {
   const context = getUnifiedBalanceKitContext();
 

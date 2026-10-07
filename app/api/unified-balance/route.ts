@@ -3,8 +3,8 @@ import fs from 'fs';
 import path from 'path';
 
 import { createPublicClient, http, formatUnits } from 'viem';
-import { baseSepolia, sepolia } from 'viem/chains';
-import { ARC_TESTNET } from '../../../lib/arcConfig';
+import { base, mainnet, polygon, arbitrum, avalanche } from 'viem/chains';
+import { ARC_MAINNET } from '../../../lib/arcConfig';
 import { fetchArcUnifiedBalance, getArcKitSupportedChains } from '../../../lib/unifiedBalanceKit';
 
 export const dynamic = 'force-dynamic';
@@ -14,18 +14,33 @@ export const dynamic = 'force-dynamic';
 // Aggregates real Circle Gateway Unified Balance breakdown and Arc on-chain balances.
 
 const arcRpcClient = createPublicClient({
-  chain: ARC_TESTNET as any,
-  transport: http('https://rpc.testnet.arc.network'),
+  chain: ARC_MAINNET as any,
+  transport: http('https://rpc.mainnet.arc.io'),
 });
 
-const baseSepoliaClient = createPublicClient({
-  chain: baseSepolia,
-  transport: http('https://sepolia.base.org'),
+const baseClient = createPublicClient({
+  chain: base,
+  transport: http('https://mainnet.base.org'),
 });
 
-const ethSepoliaClient = createPublicClient({
-  chain: sepolia,
-  transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
+const ethClient = createPublicClient({
+  chain: mainnet,
+  transport: http('https://cloudflare-eth.com'),
+});
+
+const polygonClient = createPublicClient({
+  chain: polygon,
+  transport: http('https://polygon-rpc.com'),
+});
+
+const arbitrumClient = createPublicClient({
+  chain: arbitrum,
+  transport: http('https://arb1.arbitrum.io/rpc'),
+});
+
+const avalancheClient = createPublicClient({
+  chain: avalanche,
+  transport: http('https://api.avax.network/ext/bc/C/rpc'),
 });
 
 const USDC_ABI = [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }] }] as const;
@@ -56,19 +71,37 @@ export async function GET(req: NextRequest) {
     // If External EVM Wallet is used:
     if (walletAddress) {
       try {
-        const [rawBalance, unifiedKitData, baseSepoliaUsdcRaw, ethSepoliaUsdcRaw] = await Promise.all([
+        const [rawBalance, unifiedKitData, baseUsdcRaw, ethUsdcRaw, polygonUsdcRaw, arbUsdcRaw, avaxUsdcRaw] = await Promise.all([
           arcRpcClient.getBalance({
             address: walletAddress as `0x${string}`,
           }).catch(() => BigInt(0)),
-          fetchArcUnifiedBalance(walletAddress),
-          baseSepoliaClient.readContract({
-            address: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+          fetchArcUnifiedBalance(walletAddress, ['Arc_Mainnet', 'Base', 'Ethereum', 'Polygon', 'Arbitrum', 'Avalanche'] as any),
+          baseClient.readContract({
+            address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
             abi: USDC_ABI,
             functionName: 'balanceOf',
             args: [walletAddress as `0x${string}`],
           }).catch(() => BigInt(0)),
-          ethSepoliaClient.readContract({
-            address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
+          ethClient.readContract({
+            address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+            abi: USDC_ABI,
+            functionName: 'balanceOf',
+            args: [walletAddress as `0x${string}`],
+          }).catch(() => BigInt(0)),
+          polygonClient.readContract({
+            address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+            abi: USDC_ABI,
+            functionName: 'balanceOf',
+            args: [walletAddress as `0x${string}`],
+          }).catch(() => BigInt(0)),
+          arbitrumClient.readContract({
+            address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+            abi: USDC_ABI,
+            functionName: 'balanceOf',
+            args: [walletAddress as `0x${string}`],
+          }).catch(() => BigInt(0)),
+          avalancheClient.readContract({
+            address: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
             abi: USDC_ABI,
             functionName: 'balanceOf',
             args: [walletAddress as `0x${string}`],
@@ -78,28 +111,67 @@ export async function GET(req: NextRequest) {
         const arcDirectBalance = formatUnits(rawBalance, 18);
         const directNum = parseFloat(arcDirectBalance);
         
-        // Inject Base Sepolia real on-chain balance
-        const baseSepoliaUsdc = formatUnits(baseSepoliaUsdcRaw as bigint, 6);
-        const baseSepoliaIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Base_Sepolia');
-        if (baseSepoliaIndex >= 0) {
-          unifiedKitData.chains[baseSepoliaIndex].confirmedBalance = baseSepoliaUsdc;
+        // Inject Base real on-chain balance
+        const baseUsdc = formatUnits(baseUsdcRaw as bigint, 6);
+        const baseIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Base');
+        if (baseIndex >= 0) {
+          unifiedKitData.chains[baseIndex].confirmedBalance = baseUsdc;
         } else {
           unifiedKitData.chains.push({
-            chain: 'Base_Sepolia',
-            confirmedBalance: baseSepoliaUsdc,
+            chain: 'Base',
+            confirmedBalance: baseUsdc,
             hasPending: false
           });
         }
         
-        // Inject Ethereum Sepolia real on-chain balance
-        const ethSepoliaUsdc = formatUnits(ethSepoliaUsdcRaw as bigint, 6);
-        const ethSepoliaIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Ethereum_Sepolia');
-        if (ethSepoliaIndex >= 0) {
-          unifiedKitData.chains[ethSepoliaIndex].confirmedBalance = ethSepoliaUsdc;
+        // Inject Ethereum real on-chain balance
+        const ethUsdc = formatUnits(ethUsdcRaw as bigint, 6);
+        const ethIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Ethereum');
+        if (ethIndex >= 0) {
+          unifiedKitData.chains[ethIndex].confirmedBalance = ethUsdc;
         } else {
           unifiedKitData.chains.push({
-            chain: 'Ethereum_Sepolia',
-            confirmedBalance: ethSepoliaUsdc,
+            chain: 'Ethereum',
+            confirmedBalance: ethUsdc,
+            hasPending: false
+          });
+        }
+        
+        // Inject Polygon real on-chain balance
+        const polygonUsdc = formatUnits(polygonUsdcRaw as bigint, 6);
+        const polygonIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Polygon');
+        if (polygonIndex >= 0) {
+          unifiedKitData.chains[polygonIndex].confirmedBalance = polygonUsdc;
+        } else {
+          unifiedKitData.chains.push({
+            chain: 'Polygon',
+            confirmedBalance: polygonUsdc,
+            hasPending: false
+          });
+        }
+
+        // Inject Arbitrum real on-chain balance
+        const arbUsdc = formatUnits(arbUsdcRaw as bigint, 6);
+        const arbIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Arbitrum');
+        if (arbIndex >= 0) {
+          unifiedKitData.chains[arbIndex].confirmedBalance = arbUsdc;
+        } else {
+          unifiedKitData.chains.push({
+            chain: 'Arbitrum',
+            confirmedBalance: arbUsdc,
+            hasPending: false
+          });
+        }
+
+        // Inject Avalanche real on-chain balance
+        const avaxUsdc = formatUnits(avaxUsdcRaw as bigint, 6);
+        const avaxIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Avalanche');
+        if (avaxIndex >= 0) {
+          unifiedKitData.chains[avaxIndex].confirmedBalance = avaxUsdc;
+        } else {
+          unifiedKitData.chains.push({
+            chain: 'Avalanche',
+            confirmedBalance: avaxUsdc,
             hasPending: false
           });
         }
@@ -114,17 +186,17 @@ export async function GET(req: NextRequest) {
           }
         } catch (e) {}
 
-        // Inject native balance + gateway deposits as Arc_Testnet balance for UI proxy
+        // Inject native balance + gateway deposits as Arc_Mainnet balance for UI proxy
         const arcAmount = directNum > 0 ? directNum : 0;
         const totalArc = arcAmount + gatewayDeposit;
         
         if (totalArc > 0) {
-          const arcChainIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Arc_Testnet');
+          const arcChainIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Arc_Mainnet');
           if (arcChainIndex >= 0) {
             unifiedKitData.chains[arcChainIndex].confirmedBalance = totalArc.toFixed(4);
           } else {
             unifiedKitData.chains.push({
-              chain: 'Arc_Testnet',
+              chain: 'Arc_Mainnet',
               confirmedBalance: totalArc.toFixed(4),
               hasPending: false
             });
@@ -147,13 +219,13 @@ export async function GET(req: NextRequest) {
             totalPending: unifiedKitData.totalPendingBalance,
             chains: unifiedKitData.chains,
           },
-          network: 'Arc Testnet',
+          network: 'Arc Mainnet',
           updatedAt: new Date().toISOString(),
         });
       } catch (rpcErr: any) {
         console.error('Arc Unified Balance query error:', rpcErr);
         return NextResponse.json(
-          { error: 'Unable to query on-chain balance on Arc Testnet.' },
+          { error: 'Unable to query on-chain balance on Arc Mainnet.' },
           { status: 502 }
         );
       }

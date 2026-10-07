@@ -112,7 +112,7 @@ export default function Home() {
               <span className="text-green-600">{'//'}</span> USDC Settlement
             </h3>
             <p className="text-green-500/70 text-sm leading-relaxed mt-4 font-mono">
-              {'>'} Transactions are settled instantly using Circle&apos;s USDC token directly on the Arc blockchain testnet with ~$0.000001 gas.<span className="animate-pulse font-bold text-green-400 ml-1">_</span>
+              {'>'} Transactions are settled instantly using Circle&apos;s USDC token directly on the Arc blockchain mainnet with ~$0.000001 gas.<span className="animate-pulse font-bold text-green-400 ml-1">_</span>
             </p>
           </div>
         </div>

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
   try {
     // 1. Get Token Info via Blockscout V2 API
-    const v2Res = await fetch(`https://testnet.arcscan.app/api/v2/tokens/${contractAddress}`);
+    const v2Res = await fetch(`https://explorer.arc.io/api/v2/tokens/${contractAddress}`);
     let tokenData: any = {};
     if (v2Res.ok) {
         tokenData = await v2Res.json();
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Get top token holders
-    const holdersRes = await fetch(`https://testnet.arcscan.app/api/v2/tokens/${contractAddress}/holders`);
+    const holdersRes = await fetch(`https://explorer.arc.io/api/v2/tokens/${contractAddress}/holders`);
     let topHolders = [];
     if (holdersRes.ok) {
         const hData = await holdersRes.json();
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     }
     
     // 3. Smart contract verification & creator details
-    const scRes = await fetch(`https://testnet.arcscan.app/api/v2/smart-contracts/${contractAddress}`);
+    const scRes = await fetch(`https://explorer.arc.io/api/v2/smart-contracts/${contractAddress}`);
     let isVerified = false;
     let creatorAddress = 'Unknown';
     if (scRes.ok) {
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         if (scData.creator_address_hash) creatorAddress = scData.creator_address_hash;
     } else {
         // Fallback for creator address if not returned in smart-contracts endpoint
-        const addressRes = await fetch(`https://testnet.arcscan.app/api/v2/addresses/${contractAddress}`);
+        const addressRes = await fetch(`https://explorer.arc.io/api/v2/addresses/${contractAddress}`);
         if (addressRes.ok) {
             const addrData = await addressRes.json();
             if (addrData.creator_address_hash) {

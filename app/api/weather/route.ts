@@ -19,8 +19,8 @@ export const GET = withX402(
   handler,
   (process.env.PAYMENT_RECEIVER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   {
-    price: '$1.000',
-    network: 'base-sepolia',
+    price: '$0.001',
+    network: 'arc-mainnet',
     config: { description: 'Real-time weather data - 1 call' },
   }
 );

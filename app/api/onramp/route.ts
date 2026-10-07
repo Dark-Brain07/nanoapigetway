@@ -30,20 +30,15 @@ export async function GET() {
       configured: hasApiKey && hasAppId,
       appId: process.env.NEXT_PUBLIC_CIRCLE_APP_ID || null,
       supportedChains: ['Ethereum', 'Base', 'Polygon', 'Solana', 'Avalanche', 'Arbitrum'],
-      arcTestnetDirectSupport: false,
-      note: 'Circle Fiat Onramp provides card/bank checkout to supported networks. For Arc Testnet, use the Arc Unified Balance Kit or Circle Faucet.',
+      arcMainnetDirectSupport: false,
+      note: 'Circle Fiat Onramp provides card/bank checkout to supported networks. For Arc Mainnet, use the Arc Unified Balance Kit.',
     },
     unifiedBalanceKit: {
       configured: true,
       supportedChains: kitInfo.arcChains,
-      defaultSourceChains: ['Base_Sepolia', 'Ethereum_Sepolia'],
-      destinationChain: 'Arc_Testnet',
+      defaultSourceChains: ['Base', 'Ethereum'],
+      destinationChain: 'Arc_Mainnet',
       note: 'Official @circle-fin/unified-balance-kit enables multi-chain USDC gateway deposits and unified balance routing directly to Arc.',
-    },
-    testnetFunding: {
-      configured: hasApiKey,
-      supportedChains: ['ARC-TESTNET', 'ETH-SEPOLIA', 'BASE-SEPOLIA'],
-      note: 'Circle Programmable Wallets testnet faucet natively supports ARC-TESTNET USDC.',
     },
   });
 }
@@ -74,11 +69,11 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      if (network === 'arc-testnet' || !network) {
+      if (network === 'arc-mainnet' || !network) {
         return NextResponse.json(
           {
             status: 'NETWORK_UNSUPPORTED',
-            error: 'Circle Fiat Onramp does not support direct credit card issuance directly on Arc Testnet. Supported networks are Base, Ethereum, and Polygon. Please use Arc Unified Balance Kit to bridge or Circle Faucet.',
+            error: 'Circle Fiat Onramp does not support direct credit card issuance directly on Arc Mainnet. Supported networks are Base, Ethereum, and Polygon. Please use Arc Unified Balance Kit to bridge.',
           },
           { status: 422 }
         );
@@ -109,10 +104,10 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         status: 'SUCCESS',
-        message: `Arc Unified Balance Kit deposit registered for ${walletAddress}. Target: Arc Testnet via Circle Gateway.`,
+        message: `Arc Unified Balance Kit deposit registered for ${walletAddress}. Target: Arc Mainnet via Circle Gateway.`,
         amount,
-        targetChain: 'Arc_Testnet',
-        sourceChain: sourceChain || 'Base_Sepolia',
+        targetChain: 'Arc_Mainnet',
+        sourceChain: sourceChain || 'Base',
       });
     }
 
@@ -145,26 +140,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Action 3: Testnet Token Funding (Faucet)
-    if (action === 'testnet_funding') {
-      if (!isCircleApiKeyConfigured()) {
-        return NextResponse.json(
-          { 
-            status: 'NOT_CONFIGURED',
-            error: 'Circle API key is not configured. Set CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET in .env.local to enable automated testnet token requests.' 
-          },
-          { status: 503 }
-        );
-      }
-
-      return NextResponse.json(
-        { error: 'Automated Testnet Funding is not available natively. Please use the official Circle Faucet.' },
-        { status: 501 }
-      );
-    }
-
     return NextResponse.json(
-      { error: `Unknown action: '${action}'. Expected 'create_checkout_session', 'unified_kit_deposit', or 'testnet_funding'.` },
+      { error: `Unknown action: '${action}'. Expected 'create_checkout_session', 'unified_kit_deposit'.` },
       { status: 400 }
     );
   } catch (error: any) {

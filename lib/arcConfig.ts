@@ -1,23 +1,23 @@
-export const ARC_TESTNET = {
-  id: 5042002,
-  name: 'Arc Testnet',
-  network: 'arc-testnet',
+export const ARC_MAINNET = {
+  id: 5042,
+  name: 'Arc Mainnet',
+  network: 'arc-mainnet',
   nativeCurrency: {
     name: 'USDC',
     symbol: 'USDC',
     decimals: 18,
   },
   rpcUrls: {
-    default: { http: ['https://rpc.testnet.arc.network'] },
-    public: { http: ['https://rpc.testnet.arc.network'] },
+    default: { http: ['https://rpc.mainnet.arc.io'] },
+    public: { http: ['https://rpc.mainnet.arc.io'] },
   },
   blockExplorers: {
     default: {
-      name: 'ArcScan',
-      url: 'https://testnet.arcscan.app',
+      name: 'Arc Explorer',
+      url: 'https://explorer.arc.io',
     },
   },
-  testnet: true,
+  testnet: false,
 };
 
 export const ARC_USDC_CONTRACT = '0x3600000000000000000000000000000000000000';
