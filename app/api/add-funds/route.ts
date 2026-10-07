@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { getArcKitSupportedChains } from '../../../lib/unifiedBalanceKit';
+import { getGatewayDeposits, setGatewayDeposits } from '../../../lib/kv';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,17 +91,11 @@ export async function POST(req: NextRequest) {
     // Action 2: Unified Balance Kit cross-chain allocation / deposit query
     if (action === 'unified_kit_deposit') {
       
-      const dbPath = path.join('/tmp', '.gateway_deposits.json');
-      let deposits: Record<string, number> = {};
-      try {
-        if (fs.existsSync(dbPath)) {
-          deposits = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-        }
-      } catch (e) {}
+      let deposits = await getGatewayDeposits();
       
       const current = deposits[walletAddress.toLowerCase()] || 0;
       deposits[walletAddress.toLowerCase()] = current + parseFloat(amount);
-      fs.writeFileSync(dbPath, JSON.stringify(deposits, null, 2));
+      await setGatewayDeposits(deposits);
 
       return NextResponse.json({
         status: 'SUCCESS',
@@ -112,29 +107,26 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'deduct_unified_balance') {
-      const dbPath = path.join('/tmp', '.gateway_deposits.json');
-      let deposits: Record<string, number> = {};
-      try {
-        if (fs.existsSync(dbPath)) {
-          deposits = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-        }
-      } catch (e) {}
+      let deposits = await getGatewayDeposits();
 
       const current = deposits[walletAddress.toLowerCase()] || 0;
       const deductAmount = parseFloat(amount);
       
-      // For Vercel demo environment: automatically approve micro-deductions 
-      // since the /tmp memory directory gets wiped between isolated serverless functions.
-      deposits[walletAddress.toLowerCase()] = Math.max(0, current - deductAmount);
-      try {
-        fs.writeFileSync(dbPath, JSON.stringify(deposits, null, 2));
-      } catch(e) {}
-      
-      return NextResponse.json({
-        status: 'SUCCESS',
-        message: `Successfully paid ${deductAmount} USDC from Gateway Balance. (Auto-approved for Vercel stateless demo)`,
-        remainingBalance: deposits[walletAddress.toLowerCase()]
-      });
+      if (current >= deductAmount) {
+        deposits[walletAddress.toLowerCase()] = current - deductAmount;
+        await setGatewayDeposits(deposits);
+        
+        return NextResponse.json({
+          status: 'SUCCESS',
+          message: `Successfully paid ${deductAmount} USDC from Gateway Balance.`,
+          remainingBalance: deposits[walletAddress.toLowerCase()]
+        });
+      } else {
+        return NextResponse.json({
+          status: 'INSUFFICIENT_FUNDS',
+          error: `Insufficient Gateway Balance. Have ${current} USDC, need ${deductAmount} USDC.`
+        }, { status: 402 });
+      }
     }
 
     return NextResponse.json(

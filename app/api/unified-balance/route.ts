@@ -4,6 +4,7 @@ import path from 'path';
 
 import { createPublicClient, http, formatUnits } from 'viem';
 import { base, mainnet, polygon, arbitrum, avalanche } from 'viem/chains';
+import { getGatewayDeposits } from '../../../lib/kv';
 import { ARC_MAINNET } from '../../../lib/arcConfig';
 import { fetchArcUnifiedBalance, getArcKitSupportedChains } from '../../../lib/unifiedBalanceKit';
 
@@ -177,14 +178,8 @@ export async function GET(req: NextRequest) {
         }
         
         // Read Gateway Deposits
-        const dbPath = path.join('/tmp', '.gateway_deposits.json');
-        let gatewayDeposit = 0;
-        try {
-          if (fs.existsSync(dbPath)) {
-            const deposits = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-            gatewayDeposit = deposits[walletAddress.toLowerCase()] || 0;
-          }
-        } catch (e) {}
+        const deposits = await getGatewayDeposits();
+        let gatewayDeposit = deposits[walletAddress.toLowerCase()] || 0;
 
         // Inject native balance + gateway deposits as Arc_Mainnet balance for UI proxy
         const arcAmount = directNum > 0 ? directNum : 0;
