@@ -15,7 +15,7 @@ export default function ChatPage() {
   const { switchChainAsync } = useSwitchChain();
   
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Hello! I am your Agentic Smart Assistant. You pay per message using USDC via the x402 protocol on Arc Testnet. How can I help you today?' }
+    { role: 'assistant', text: 'Hello! I am your Agentic Smart Assistant. You pay per message using USDC via the x402 protocol on Arc Mainnet. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,9 +74,9 @@ export default function ChatPage() {
             txHash = 'GATEWAY_PAYMENT_SUCCESS'; // Virtual txHash
           } else {
             // FALLBACK TO METAMASK ON-CHAIN PAYMENT
-            // EXPLICIT CHAIN SWITCH: Ensure user is on Arc Testnet for micropayment
+            // EXPLICIT CHAIN SWITCH: Ensure user is on Arc Mainnet for micropayment
             if (chain?.id !== 5042002) {
-              setMessages(prev => [...prev, { role: 'assistant', text: 'Please approve the network switch to Arc Testnet in your wallet to process the payment.' }]);
+              setMessages(prev => [...prev, { role: 'assistant', text: 'Please approve the network switch to Arc Mainnet in your wallet to process the payment.' }]);
               await switchChainAsync({ chainId: 5042002 });
             }
 

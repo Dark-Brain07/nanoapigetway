@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       status: 'success', 
       txHash: '0x' + Math.random().toString(16).substring(2, 42).padEnd(40, '0'),
-      message: `Bridged ${amount} USDC from ${sourceChain} to Arc Testnet`
+      message: `Bridged ${amount} USDC from ${sourceChain} to Arc Mainnet`
     });
   } catch (error) {
     return NextResponse.json({ error: "Bridge failed" }, { status: 500 });

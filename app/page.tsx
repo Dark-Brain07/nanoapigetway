@@ -21,7 +21,7 @@ export default function Home() {
               </a>
               <div className="absolute top-full right-0 mt-2 w-56 p-3 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl text-[11px] text-slate-300 leading-relaxed opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all duration-200 z-50 pointer-events-none">
                 <div className="font-bold text-red-400 mb-1 text-xs">💧 Free Testnet USDC</div>
-                Get free USDC on Arc Testnet to test all APIs without spending real money.
+                Get free USDC on Arc Mainnet to test all APIs without spending real money.
                 <div className="absolute -top-1.5 right-6 w-3 h-3 bg-slate-900 border-l border-t border-slate-700 rotate-45"></div>
               </div>
             </div>

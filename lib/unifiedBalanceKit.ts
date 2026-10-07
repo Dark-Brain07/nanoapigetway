@@ -40,7 +40,7 @@ export interface ArcUnifiedBalanceDetails {
 }
 
 /**
- * Queries official Circle Unified Balance across Arc Testnet and cross-chain sources.
+ * Queries official Circle Unified Balance across Arc Mainnet and cross-chain sources.
  * Validates real gateway balances directly against Circle Gateway endpoints.
  */
 export async function fetchArcUnifiedBalance(
@@ -100,7 +100,7 @@ export async function fetchArcUnifiedBalance(
 
 /**
  * Returns metadata for all supported chains in the Unified Balance Kit,
- * explicitly highlighting Arc Testnet.
+ * explicitly highlighting Arc Mainnet.
  */
 export function getArcKitSupportedChains() {
   const context = getUnifiedBalanceKitContext();

@@ -10,7 +10,7 @@ import { fetchArcUnifiedBalance, getArcKitSupportedChains } from '../../../lib/u
 export const dynamic = 'force-dynamic';
 
 // Server-authoritative Circle Unified Balance Endpoint
-// Powered by official @circle-fin/unified-balance-kit and Arc Testnet RPC.
+// Powered by official @circle-fin/unified-balance-kit and Arc Mainnet RPC.
 // Aggregates real Circle Gateway Unified Balance breakdown and Arc on-chain balances.
 
 const arcRpcClient = createPublicClient({

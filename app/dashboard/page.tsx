@@ -23,7 +23,7 @@ export default function Dashboard() {
               </a>
               <div className="absolute top-full right-0 mt-2 w-56 p-3 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl text-[11px] text-slate-300 leading-relaxed opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all duration-200 z-50 pointer-events-none">
                 <div className="font-bold text-red-400 mb-1 text-xs">💧 Free Testnet USDC</div>
-                Get free USDC on Arc Testnet to test all APIs without spending real money.
+                Get free USDC on Arc Mainnet to test all APIs without spending real money.
                 <div className="absolute -top-1.5 right-6 w-3 h-3 bg-slate-900 border-l border-t border-slate-700 rotate-45"></div>
               </div>
             </div>
@@ -68,7 +68,7 @@ export default function Dashboard() {
           <div className="xl:col-span-2 space-y-8">
             <div>
               <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 drop-shadow-sm">API Marketplace</h2>
-              <p className="text-slate-400 text-sm sm:text-lg">Sub-cent micropayments enabled by x402 on Arc Testnet.</p>
+              <p className="text-slate-400 text-sm sm:text-lg">Sub-cent micropayments enabled by x402 on Arc Mainnet.</p>
             </div>
             
             <div className="grid sm:grid-cols-2 gap-6 items-start">
@@ -117,7 +117,7 @@ export default function Dashboard() {
               <ApiCard 
                 title="Token Information"
                 endpoint="/api/token-info"
-                description="Deep-dive into any Arc Testnet token. Get holders, creators, safety metrics, and recent activity."
+                description="Deep-dive into any Arc Mainnet token. Get holders, creators, safety metrics, and recent activity."
                 price="$0.001"
                 paramName="contractAddress"
                 defaultParam="0x3600000000000000000000000000000000000000"
