@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     currency: 'USDC',
     accepts: [
       {
-        network: 'arc-mainnet',
+        network: 'arc-mainnet' as any,
         token: 'USDC',
         payTo: '0xfd4960F33670f3477ebe817B184dd59fC4961437' // NanoAPI Treasury
       }

@@ -16,7 +16,7 @@ export const GET = withX402(
   (process.env.PAYMENT_RECEIVER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   {
     price: '$0.001',
-    network: 'arc-mainnet',
+    network: 'arc-mainnet' as any,
     config: { description: 'Live crypto prices - 1 call' },
   }
 );
