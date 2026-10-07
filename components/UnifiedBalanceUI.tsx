@@ -82,7 +82,7 @@ export default function UnifiedBalanceUI() {
 
       <div className="mt-4 relative z-10">
         <Link 
-          href="/onramp"
+          href="/add-funds"
           className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-3 rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] flex items-center justify-center gap-2 group/btn"
         >
           <Plus size={16} className="group-hover/btn:rotate-90 transition-transform duration-300" />

@@ -250,7 +250,7 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
         if (address) {
           // TRY GATEWAY BALANCE FIRST (Gasless)
           try {
-            const deductRes = await fetch('/api/onramp', {
+            const deductRes = await fetch('/api/add-funds', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

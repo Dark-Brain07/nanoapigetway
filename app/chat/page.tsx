@@ -57,7 +57,7 @@ export default function ChatPage() {
         
         // TRY GATEWAY BALANCE FIRST (Gasless)
         try {
-          const deductRes = await fetch('/api/onramp', {
+          const deductRes = await fetch('/api/add-funds', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

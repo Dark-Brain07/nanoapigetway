@@ -147,7 +147,7 @@ export default function OnrampPage() {
 
     const fetchConfig = async () => {
       try {
-        const res = await fetch('/api/onramp');
+        const res = await fetch('/api/add-funds');
         const data = await res.json();
         const isFiatConfigured = Boolean(data?.fiatOnramp?.configured);
         setConfigInfo({
@@ -277,7 +277,7 @@ export default function OnrampPage() {
       // Wait a moment for UX
       await new Promise(r => setTimeout(r, 2000));
 
-      const res = await fetch('/api/onramp', {
+      const res = await fetch('/api/add-funds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -330,7 +330,7 @@ export default function OnrampPage() {
     setStatusMessage('Creating official Circle Onramp checkout session...');
 
     try {
-      const res = await fetch('/api/onramp', {
+      const res = await fetch('/api/add-funds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -369,7 +369,7 @@ export default function OnrampPage() {
     setFaucetMessage('Requesting testnet tokens from Circle Faucet...');
 
     try {
-      const res = await fetch('/api/onramp', {
+      const res = await fetch('/api/add-funds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -419,7 +419,7 @@ export default function OnrampPage() {
             </Link>
 
             <Link
-              href="/onramp"
+              href="/add-funds"
               className="relative inline-flex items-center justify-center px-3.5 py-1.5 font-black text-slate-900 bg-gradient-to-b from-cyan-400 to-cyan-500 rounded-xl shadow-[0_4px_0_rgb(8,145,178)] hover:from-cyan-300 hover:to-cyan-400 active:translate-y-[4px] active:shadow-[0_0_0_rgb(8,145,178)] transition-all text-[10px] sm:text-xs border border-cyan-200/50 h-[34px]"
             >
               <span className="text-slate-900 font-extrabold mr-1">+</span>
