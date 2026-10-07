@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     // Action 2: Unified Balance Kit cross-chain allocation / deposit query
     if (action === 'unified_kit_deposit') {
       
-      const dbPath = path.join(process.cwd(), '.gateway_deposits.json');
+      const dbPath = path.join('/tmp', '.gateway_deposits.json');
       let deposits: Record<string, number> = {};
       try {
         if (fs.existsSync(dbPath)) {
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'deduct_unified_balance') {
-      const dbPath = path.join(process.cwd(), '.gateway_deposits.json');
+      const dbPath = path.join('/tmp', '.gateway_deposits.json');
       let deposits: Record<string, number> = {};
       try {
         if (fs.existsSync(dbPath)) {

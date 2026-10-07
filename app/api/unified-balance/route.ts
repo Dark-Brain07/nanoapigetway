@@ -177,7 +177,7 @@ export async function GET(req: NextRequest) {
         }
         
         // Read Gateway Deposits
-        const dbPath = path.join(process.cwd(), '.gateway_deposits.json');
+        const dbPath = path.join('/tmp', '.gateway_deposits.json');
         let gatewayDeposit = 0;
         try {
           if (fs.existsSync(dbPath)) {
