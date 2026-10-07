@@ -245,13 +245,31 @@ export default function OnrampPage() {
     setStatusMessage(`Initiating Arc Unified Balance Kit allocation from ${sourceChain.replace('_', ' ')}...`);
 
     try {
-      // Execute REAL on-chain ERC20 transaction to the Unified Gateway Contract
-      const isEthSepolia = sourceChain === 'Ethereum_Sepolia';
-      const usdcAddress = isEthSepolia 
-        ? '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' // Eth Sepolia USDC
-        : '0x036CbD53842c5426634e7929541eC2318f3dCF7e'; // Base Sepolia USDC (default)
-        
-      const targetChainId = isEthSepolia ? 11155111 : 84532;
+      let usdcAddress = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // Base Default
+      let targetChainId = 8453; // Base Default
+
+      switch (sourceChain) {
+        case 'Base':
+          usdcAddress = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+          targetChainId = 8453;
+          break;
+        case 'Ethereum':
+          usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+          targetChainId = 1;
+          break;
+        case 'Polygon':
+          usdcAddress = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359';
+          targetChainId = 137;
+          break;
+        case 'Arbitrum':
+          usdcAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
+          targetChainId = 42161;
+          break;
+        case 'Avalanche':
+          usdcAddress = '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E';
+          targetChainId = 43114;
+          break;
+      }
 
       // EXPLICIT CHAIN SWITCH: Ensure the user is on the right network first
       if (chain?.id !== targetChainId) {
