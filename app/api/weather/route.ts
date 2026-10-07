@@ -20,7 +20,7 @@ export const GET = withX402(
   (process.env.PAYMENT_RECEIVER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   {
     price: '$0.001',
-    network: 'arc-mainnet' as any,
+    network: 'base',
     config: { description: 'Real-time weather data - 1 call' },
   }
 );

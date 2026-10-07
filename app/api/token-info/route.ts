@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     currency: 'USDC',
     accepts: [
       {
-        network: 'arc-mainnet' as any,
+        network: 'base',
         token: 'USDC',
         payTo: '0xfd4960F33670f3477ebe817B184dd59fC4961437' // NanoAPI Treasury
       }
