@@ -244,8 +244,7 @@ export default function ApiCard({ title, endpoint, description, price, defaultPa
 
       if (challengeRes.status === 402 || challengeData.error) {
         const numericPrice = price.replace('$', '');
-        const requestedNetwork = challengeData.accepts?.[0]?.network || 'arc-mainnet';
-        const targetChainId = requestedNetwork === 'base' ? 8453 : 5042;
+        const targetChainId = 5042; // Force Arc Mainnet for native fallback
 
         if (address) {
           // TRY GATEWAY BALANCE FIRST (Gasless)

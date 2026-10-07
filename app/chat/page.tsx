@@ -75,15 +75,15 @@ export default function ChatPage() {
           } else {
             // FALLBACK TO METAMASK ON-CHAIN PAYMENT
             // EXPLICIT CHAIN SWITCH: Ensure user is on Arc Mainnet for micropayment
-            if (chain?.id !== 5042002) {
+            if (chain?.id !== 5042) {
               setMessages(prev => [...prev, { role: 'assistant', text: 'Please approve the network switch to Arc Mainnet in your wallet to process the payment.' }]);
-              await switchChainAsync({ chainId: 5042002 });
+              await switchChainAsync({ chainId: 5042 });
             }
 
             txHash = await sendTransactionAsync({
               to: challenge.accepts[0].payTo as `0x${string}`,
               value: parseEther(challenge.amount), // Native ARC used for fee sim
-              chainId: 5042002,
+              chainId: 5042,
             });
           }
         } catch (err: any) {
