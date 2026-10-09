@@ -39,7 +39,7 @@ export default function MarginAnalysis() {
       </div>
 
       <div className="bg-purple-900/20 border border-purple-800/50 p-5 rounded-lg shadow-sm">
-        <div className="text-purple-300 font-bold mb-3 uppercase tracking-widest text-xs">The Profit Logic Demonstration</div>
+        <div className="text-purple-300 font-bold mb-3 uppercase tracking-widest text-xs">The Profit Economics Breakdown</div>
         <div className="text-slate-300 text-sm leading-relaxed space-y-3">
           <p className="opacity-90">If 1,000 users call the weather API 10 times a day:</p>
           <div className="bg-slate-900/60 p-3 rounded-md border border-slate-700/50 flex flex-col gap-2">
