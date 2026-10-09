@@ -538,147 +538,108 @@ export default function AddFundsPage() {
                   <label className="block text-xs uppercase font-bold tracking-wider text-slate-400">
                     Source Chain Liquidity
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSourceChain('Arc')}
-                      className={`p-3 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Arc'
-                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]'
-                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="text-xs font-bold text-white flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-                          Arc Mainnet
-                        </span>
-                        {walletBalances['Arc'] && (
-                          <span className="text-[10px] text-emerald-400 font-mono font-bold">
-                            {parseFloat(walletBalances['Arc']).toFixed(4)} USDC
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5 flex items-center justify-between">
-                        <span>Domain 26</span>
-                        <span className="text-emerald-400 font-sans font-medium text-[9.5px]">1 Block (Instant)</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSourceChain('Base')}
-                      className={`p-3 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Base'
-                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]'
-                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="text-xs font-bold text-white flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-blue-400"></span>
-                          Base
-                        </span>
-                        {walletBalances['Base'] && (
-                          <span className="text-[10px] text-blue-400 font-mono font-bold">
-                            {parseFloat(walletBalances['Base']).toFixed(4)} USDC
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5 flex items-center justify-between">
-                        <span>Domain 6</span>
-                        <span className="text-amber-400 font-sans font-medium text-[9.5px]">~200 Blocks (~7-10m)</span>
-                      </div>
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3">
-                    <button
-                      type="button"
-                      onClick={() => setSourceChain('Ethereum')}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Ethereum'
-                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
-                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="text-xs font-bold text-white flex items-center justify-between">
-                        <span>Ethereum</span>
-                        {walletBalances['Ethereum'] && parseFloat(walletBalances['Ethereum']) > 0 && (
-                          <span className="text-[9.5px] text-cyan-400 font-mono font-bold">
-                            {parseFloat(walletBalances['Ethereum']).toFixed(4)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
-                        <span>Domain 0</span>
-                        <span className="text-slate-300 font-sans text-[8.5px] sm:text-[9px]">64 Blocks (~12m)</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSourceChain('Polygon')}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Polygon'
-                          ? 'bg-purple-950/40 border-purple-500/50 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]'
-                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="text-xs font-bold text-white flex items-center justify-between">
-                        <span>Polygon</span>
-                        {walletBalances['Polygon'] && (
-                          <span className="text-[9.5px] text-purple-400 font-mono font-bold">
-                            {parseFloat(walletBalances['Polygon']).toFixed(4)} USDC
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
-                        <span>Domain 7</span>
-                        <span className="text-purple-300 font-sans text-[8.5px] sm:text-[9px]">~128 Blocks (~5m)</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSourceChain('Arbitrum')}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Arbitrum'
-                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
-                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="text-xs font-bold text-white flex items-center justify-between">
-                        <span>Arbitrum</span>
-                        {walletBalances['Arbitrum'] && parseFloat(walletBalances['Arbitrum']) > 0 && (
-                          <span className="text-[9.5px] text-blue-400 font-mono font-bold">
-                            {parseFloat(walletBalances['Arbitrum']).toFixed(4)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
-                        <span>Domain 3</span>
-                        <span className="text-sky-300 font-sans text-[8.5px] sm:text-[9px]">~1000 Blocks (~10m)</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSourceChain('Avalanche')}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Avalanche'
-                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
-                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="text-xs font-bold text-white flex items-center justify-between">
-                        <span>Avalanche</span>
-                        {walletBalances['Avalanche'] && parseFloat(walletBalances['Avalanche']) > 0 && (
-                          <span className="text-[9.5px] text-red-400 font-mono font-bold">
-                            {parseFloat(walletBalances['Avalanche']).toFixed(4)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
-                        <span>Domain 1</span>
-                        <span className="text-emerald-400 font-sans text-[8.5px] sm:text-[9px]">1 Block (Instant)</span>
-                      </div>
-                    </button>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {[
+                      {
+                        id: 'Arc',
+                        name: 'Arc',
+                        domain: 'Domain 26',
+                        blocks: '1 Block',
+                        time: 'Instant',
+                        dot: 'bg-emerald-400',
+                        selectedStyle: 'bg-cyan-950/40 border-cyan-500/50 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]',
+                        badgeStyle: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+                      },
+                      {
+                        id: 'Base',
+                        name: 'Base',
+                        domain: 'Domain 6',
+                        blocks: '~200 Blks',
+                        time: '~7-10m',
+                        dot: 'bg-blue-400',
+                        selectedStyle: 'bg-blue-950/40 border-blue-500/50 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]',
+                        badgeStyle: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+                      },
+                      {
+                        id: 'Polygon',
+                        name: 'Polygon',
+                        domain: 'Domain 7',
+                        blocks: '~128 Blks',
+                        time: '~5m',
+                        dot: 'bg-purple-400',
+                        selectedStyle: 'bg-purple-950/40 border-purple-500/50 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]',
+                        badgeStyle: 'text-purple-300 bg-purple-500/10 border-purple-500/30',
+                      },
+                      {
+                        id: 'Avalanche',
+                        name: 'Avalanche',
+                        domain: 'Domain 1',
+                        blocks: '1 Block',
+                        time: 'Instant',
+                        dot: 'bg-red-400',
+                        selectedStyle: 'bg-red-950/40 border-red-500/50 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)]',
+                        badgeStyle: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+                      },
+                      {
+                        id: 'Arbitrum',
+                        name: 'Arbitrum',
+                        domain: 'Domain 3',
+                        blocks: '~1000 Blks',
+                        time: '~10m',
+                        dot: 'bg-sky-400',
+                        selectedStyle: 'bg-sky-950/40 border-sky-500/50 text-white shadow-[0_0_15px_rgba(14,165,233,0.3)]',
+                        badgeStyle: 'text-sky-300 bg-sky-500/10 border-sky-500/30',
+                      },
+                      {
+                        id: 'Ethereum',
+                        name: 'Ethereum',
+                        domain: 'Domain 0',
+                        blocks: '64 Blks',
+                        time: '~12m',
+                        dot: 'bg-slate-300',
+                        selectedStyle: 'bg-slate-900/60 border-slate-400/50 text-white shadow-[0_0_15px_rgba(148,163,184,0.3)]',
+                        badgeStyle: 'text-slate-300 bg-slate-500/10 border-slate-500/30',
+                      },
+                    ].map((chainItem) => {
+                      const isSelected = sourceChain === chainItem.id;
+                      const balance = walletBalances[chainItem.id] ?? (chainItem.id === 'Arc' ? onChainBalance : undefined);
+                      const hasBalance = balance && parseFloat(balance) > 0;
+
+                      return (
+                        <button
+                          key={chainItem.id}
+                          type="button"
+                          onClick={() => setSourceChain(chainItem.id)}
+                          className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all flex flex-col justify-between min-h-[72px] ${
+                            isSelected
+                              ? chainItem.selectedStyle
+                              : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700 hover:bg-slate-900/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1 w-full">
+                            <span className="flex items-center gap-1.5 font-bold text-xs text-white shrink-0">
+                              <span className={`h-2 w-2 rounded-full shrink-0 ${chainItem.dot}`} />
+                              {chainItem.name}
+                            </span>
+                            {hasBalance ? (
+                              <span className="text-[9.5px] text-emerald-400 font-mono font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30 shrink-0">
+                                {parseFloat(balance).toFixed(4)} USDC
+                              </span>
+                            ) : (
+                              <span className="text-[9px] text-slate-500 font-mono shrink-0">
+                                0.00 USDC
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] font-mono mt-2 flex items-center justify-between gap-1 w-full">
+                            <span className="text-cyan-400/90 font-medium">{chainItem.domain}</span>
+                            <span className={`text-[9px] font-sans font-medium px-1.5 py-0.5 rounded border shrink-0 ${chainItem.badgeStyle}`}>
+                              {chainItem.blocks} ({chainItem.time})
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
