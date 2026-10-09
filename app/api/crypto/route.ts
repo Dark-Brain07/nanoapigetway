@@ -6,7 +6,7 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export async function GET(req: NextRequest) {
-  const authResult = await protectWithX402(req, '/api/crypto-price');
+  const authResult = await protectWithX402(req, '/api/crypto');
   if (!authResult.success) {
     return authResult.response;
   }
@@ -27,27 +27,6 @@ export async function GET(req: NextRequest) {
     );
 
     if (!res.ok) {
-      // CoinCap or Binance fallback if CoinGecko rate limits
-      const binanceRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT"]', {
-        cache: 'no-store',
-      });
-      if (binanceRes.ok) {
-        const binanceData = await binanceRes.json();
-        return NextResponse.json({
-          source: 'Binance Live Feed',
-          data: binanceData,
-          _payment: {
-            settlementId: authResult.settlementId,
-            payer: authResult.payer,
-            amount: authResult.amount,
-            network: authResult.network,
-          },
-        }, {
-          headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          },
-        });
-      }
       throw new Error(`CoinGecko API returned HTTP ${res.status}`);
     }
 
@@ -72,7 +51,7 @@ export async function GET(req: NextRequest) {
       }
     );
   } catch (error: any) {
-    console.error('[Crypto Price API] Error fetching prices:', error);
+    console.error('[Crypto API] Error fetching crypto prices:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to fetch cryptocurrency price feed' },
       { status: 502 }

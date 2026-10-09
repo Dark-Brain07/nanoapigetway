@@ -21,6 +21,9 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta property="og:title" content="NanoAPI Gateway — Sub-Cent AI API Payments" />
         <meta property="og:description" content="True pay-per-use AI APIs starting at $0.001 USDC per call, powered by x402 protocol on Arc Mainnet." />
+        <link rel="icon" href="/nanoapigateway_logo.png" type="image/png" />
+        <link rel="shortcut icon" href="/nanoapigateway_logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/nanoapigateway_logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />

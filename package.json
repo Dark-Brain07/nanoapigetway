@@ -6,13 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/test_x402_gateway.mjs"
   },
   "dependencies": {
     "@circle-fin/adapter-viem-v2": "^1.18.0",
     "@circle-fin/developer-controlled-wallets": "latest",
     "@circle-fin/onramp-kit": "^1.0.3",
     "@circle-fin/unified-balance-kit": "^1.7.0",
+    "@circle-fin/x402-batching": "^3.5.0",
     "@coinbase/x402": "latest",
     "@tanstack/react-query": "^5.99.1",
     "@vercel/kv": "^3.0.0",

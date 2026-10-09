@@ -2,6 +2,7 @@ import Link from 'next/link';
 import WalletConnector from '../components/WalletConnector';
 import HomeWrapper from '../components/HomeWrapper';
 import UsdcBalance from '../components/UsdcBalance';
+import MobileMenu from '../components/MobileMenu';
 
 export default function Home() {
   return (
@@ -16,12 +17,13 @@ export default function Home() {
           </Link>
           <div className="flex items-center gap-3 sm:gap-6">
             <div className="relative hidden sm:block group/tip">
-              <a href="https://faucet.circle.com" target="_blank" rel="noreferrer" className="relative inline-flex items-center justify-center px-4 py-1.5 font-black text-white bg-gradient-to-b from-red-500 to-red-600 rounded-xl shadow-[0_4px_0_rgb(153,27,27)] hover:from-red-400 hover:to-red-500 hover:shadow-[0_4px_0_rgb(153,27,27),0_0_15px_rgba(239,68,68,0.6)] active:translate-y-[4px] active:shadow-[0_0_0_rgb(153,27,27)] transition-all overflow-hidden border border-red-400/50">
-                <span className="relative z-10 animate-pulse tracking-[0.2em] text-[10px] sm:text-xs">FAUCET</span>
+              <a href="https://explorer.arc.io" target="_blank" rel="noreferrer" className="relative inline-flex items-center justify-center px-3.5 py-1.5 font-bold text-white bg-slate-805/80 hover:bg-slate-700/80 rounded-xl shadow-sm border border-slate-700/60 transition-all text-[10px] sm:text-xs">
+                <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                Arc Mainnet
               </a>
               <div className="absolute top-full right-0 mt-2 w-56 p-3 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl text-[11px] text-slate-300 leading-relaxed opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all duration-200 z-50 pointer-events-none">
-                <div className="font-bold text-red-400 mb-1 text-xs">💧 Free Testnet USDC</div>
-                Get free USDC on Arc Mainnet to test all APIs without spending real money.
+                <div className="font-bold text-emerald-400 mb-1 text-xs">⚡ Arc Mainnet (Chain 5042)</div>
+                Live production blockchain with sub-cent USDC settlements and Circle Gateway domain 26.
                 <div className="absolute -top-1.5 right-6 w-3 h-3 bg-slate-900 border-l border-t border-slate-700 rotate-45"></div>
               </div>
             </div>
@@ -34,7 +36,7 @@ export default function Home() {
               </Link>
               <div className="absolute top-full right-0 mt-2 w-64 p-3 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl text-[11px] text-slate-300 leading-relaxed opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all duration-200 z-50 pointer-events-none">
                 <div className="font-bold text-yellow-400 mb-1 text-xs">🤖 Agentic Smart Assistant</div>
-                Chat with an advanced AI and pay precisely $0.001 USDC per message through the x402 protocol.
+                Chat with an advanced AI and pay precisely $0.0001 USDC per message through the x402 protocol.
                 <div className="absolute -top-1.5 right-6 w-3 h-3 bg-slate-900 border-l border-t border-slate-700 rotate-45"></div>
               </div>
             </div>
@@ -45,15 +47,16 @@ export default function Home() {
                 className="relative inline-flex items-center justify-center px-3.5 py-1.5 font-black text-slate-900 bg-gradient-to-b from-cyan-400 to-cyan-500 rounded-xl shadow-[0_4px_0_rgb(8,145,178)] hover:from-cyan-300 hover:to-cyan-400 active:translate-y-[4px] active:shadow-[0_0_0_rgb(8,145,178)] transition-all text-[10px] sm:text-xs border border-cyan-200/50 h-[34px]"
               >
                 <span className="text-slate-900 font-extrabold mr-1">+</span>
-                Add Funds
+                Deposit Gateway
               </Link>
               <div className="absolute top-full right-0 mt-2 w-56 p-3 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl text-[11px] text-slate-300 leading-relaxed opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all duration-200 z-50 pointer-events-none">
-                <div className="font-bold text-cyan-400 mb-1 text-xs">💳 Fiat On-Ramp</div>
-                Purchase real USDC directly with credit card or fiat via our integrated on-ramp providers.
+                <div className="font-bold text-cyan-400 mb-1 text-xs">⚡ Circle Gateway Funding</div>
+                Deposit USDC to Circle Gateway Wallet on Arc Mainnet for instant, gas-free nanopayments.
                 <div className="absolute -top-1.5 right-6 w-3 h-3 bg-slate-900 border-l border-t border-slate-700 rotate-45"></div>
               </div>
             </div>
             <UsdcBalance />
+            <MobileMenu />
           </div>
         </div>
       </header>
@@ -146,13 +149,13 @@ export default function Home() {
             <div className="w-14 h-14 mb-4 border border-green-700/50 bg-black p-2 relative group-hover:border-green-400 transition-colors shadow-inner">
               <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t-2 border-l-2 border-green-500"></div>
               <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b-2 border-r-2 border-green-500"></div>
-              <img src="/dev_wallet_logo.png" alt="Developer Wallets Logo" className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+              <img src="/gateway_unified_logo.png" alt="Unified Gateway Balance Logo" className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
             </div>
             <h3 className="text-lg font-black text-green-400 font-mono tracking-tight uppercase flex items-center gap-2 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
-              <span className="text-green-600">{'//'}</span> Unified Balance & Onramp
+              <span className="text-green-600">{'//'}</span> Unified Gateway Balance
             </h3>
             <p className="text-green-500/70 text-sm leading-relaxed mt-4 font-mono">
-              {'>'} Instantly top-up your Arc unified balance using credit card or fiat. Fund API micropayments globally with zero friction.<span className="animate-pulse font-bold text-green-400 ml-1">_</span>
+              {'>'} Aggregate multi-chain USDC into a single Circle Gateway unified balance. Power gasless, sub-cent AI and API micropayments with zero friction.<span className="animate-pulse font-bold text-green-400 ml-1">_</span>
             </p>
           </div>
         </div>

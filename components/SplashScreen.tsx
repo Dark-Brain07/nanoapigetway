@@ -115,14 +115,14 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
 
       {/* "BUILT ON" text */}
       <div
-        className={`text-center z-40 transition-all duration-700 ${
+        className={`text-center z-40 transition-all duration-700 drop-shadow-[0_0_15px_rgba(34,211,238,0.6)] ${
           phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         } ${phase >= 2 ? 'mb-2' : 'mb-0'}`}
       >
         <span
           className="text-sm sm:text-lg tracking-[0.5em] uppercase font-bold"
           style={{
-            background: 'linear-gradient(90deg, #a855f7, #3b82f6, #ffffff)',
+            background: 'linear-gradient(90deg, #22d3ee, #38bdf8, #ffffff)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             textShadow: 'none',

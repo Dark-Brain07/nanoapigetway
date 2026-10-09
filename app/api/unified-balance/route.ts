@@ -1,239 +1,252 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
 import { createPublicClient, http, formatUnits } from 'viem';
-import { base, mainnet, polygon, arbitrum, avalanche } from 'viem/chains';
-import { getGatewayDeposits } from '../../../lib/kv';
-import { ARC_MAINNET } from '../../../lib/arcConfig';
-import { fetchArcUnifiedBalance, getArcKitSupportedChains } from '../../../lib/unifiedBalanceKit';
+import { base } from 'viem/chains';
+import {
+  ARC_MAINNET,
+  ARC_USDC_CONTRACT,
+  CIRCLE_GATEWAY_API_URL,
+  CIRCLE_GATEWAY_WALLET,
+  CIRCLE_GATEWAY_MINTER,
+} from '@/lib/arcConfig';
+import { getSellerAddress } from '@/lib/x402Server';
 
 export const dynamic = 'force-dynamic';
 
-// Server-authoritative Circle Unified Balance Endpoint
-// Powered by official @circle-fin/unified-balance-kit and Arc Mainnet RPC.
-// Aggregates real Circle Gateway Unified Balance breakdown and Arc on-chain balances.
-
 const arcRpcClient = createPublicClient({
-  chain: ARC_MAINNET as any,
-  transport: http('https://rpc.mainnet.arc.io'),
+  chain: ARC_MAINNET,
+  transport: http(ARC_MAINNET.rpcUrls.default.http[0], { timeout: 6000 }),
 });
 
-const baseClient = createPublicClient({
-  chain: base,
-  transport: http('https://mainnet.base.org'),
-});
+const SOURCE_CHAINS: Record<string, { name: string; domain: number; chainId: number; rpcUrl: string; usdcAddress: string }> = {
+  Arc: {
+    name: 'Arc Mainnet',
+    domain: 26,
+    chainId: 5042,
+    rpcUrl: ARC_MAINNET.rpcUrls.default.http[0],
+    usdcAddress: ARC_USDC_CONTRACT,
+  },
+  Base: {
+    name: 'Base',
+    domain: 6,
+    chainId: 8453,
+    rpcUrl: 'https://base-rpc.publicnode.com',
+    usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  },
+  Polygon: {
+    name: 'Polygon',
+    domain: 7,
+    chainId: 137,
+    rpcUrl: 'https://polygon-bor-rpc.publicnode.com',
+    usdcAddress: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+  },
+  Ethereum: {
+    name: 'Ethereum',
+    domain: 0,
+    chainId: 1,
+    rpcUrl: 'https://ethereum-rpc.publicnode.com',
+    usdcAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  },
+  Arbitrum: {
+    name: 'Arbitrum',
+    domain: 3,
+    chainId: 42161,
+    rpcUrl: 'https://arbitrum-one-rpc.publicnode.com',
+    usdcAddress: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+  },
+  Avalanche: {
+    name: 'Avalanche',
+    domain: 1,
+    chainId: 43114,
+    rpcUrl: 'https://avalanche-c-chain-rpc.publicnode.com',
+    usdcAddress: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
+  },
+};
 
-const ethClient = createPublicClient({
-  chain: mainnet,
-  transport: http('https://cloudflare-eth.com'),
-});
+const ERC20_ABI = [
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+  },
+] as const;
 
-const polygonClient = createPublicClient({
-  chain: polygon,
-  transport: http('https://polygon-rpc.com'),
-});
-
-const arbitrumClient = createPublicClient({
-  chain: arbitrum,
-  transport: http('https://arb1.arbitrum.io/rpc'),
-});
-
-const avalancheClient = createPublicClient({
-  chain: avalanche,
-  transport: http('https://api.avax.network/ext/bc/C/rpc'),
-});
-
-const USDC_ABI = [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }] }] as const;
-
-function isCircleConfigured(): boolean {
-  const apiKey = process.env.CIRCLE_API_KEY;
-  if (!apiKey || apiKey === 'placeholder' || apiKey === 'get_from_console.circle.com') {
-    return false;
-  }
-  return true;
-}
+// Domain mapping to human readable chain names
+const DOMAIN_MAP: Record<number, string> = {
+  26: 'Arc',
+  6: 'Base',
+  0: 'Ethereum',
+  1: 'Avalanche',
+  3: 'Arbitrum',
+  2: 'Optimism',
+  7: 'Polygon',
+  10: 'Unichain',
+  13: 'Sonic',
+  14: 'Worldchain',
+  16: 'Sei',
+  19: 'HyperEVM',
+  5: 'Solana',
+};
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const walletId = searchParams.get('walletId');
-    const walletAddress = searchParams.get('address');
+    const address = searchParams.get('address');
+    const isSellerQuery = searchParams.get('seller') === 'true';
 
-    if (!walletId && !walletAddress) {
+    const targetAddress = isSellerQuery ? getSellerAddress() : address;
+
+    if (!targetAddress || !targetAddress.startsWith('0x')) {
       return NextResponse.json(
-        { error: 'Missing wallet identification. Provide walletId or address.' },
+        { error: 'Valid 0x wallet address is required.' },
         { status: 400 }
       );
     }
 
-    let targetAddress = walletAddress || '';
+    const sellerAddress = getSellerAddress();
 
-    // If External EVM Wallet is used:
-    if (walletAddress) {
-      try {
-        const [rawBalance, unifiedKitData, baseUsdcRaw, ethUsdcRaw, polygonUsdcRaw, arbUsdcRaw, avaxUsdcRaw] = await Promise.all([
-          arcRpcClient.getBalance({
-            address: walletAddress as `0x${string}`,
-          }).catch(() => BigInt(0)),
-          fetchArcUnifiedBalance(walletAddress, ['Arc_Mainnet', 'Base', 'Ethereum', 'Polygon', 'Arbitrum', 'Avalanche'] as any),
-          baseClient.readContract({
-            address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-            abi: USDC_ABI,
-            functionName: 'balanceOf',
-            args: [walletAddress as `0x${string}`],
-          }).catch(() => BigInt(0)),
-          ethClient.readContract({
-            address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-            abi: USDC_ABI,
-            functionName: 'balanceOf',
-            args: [walletAddress as `0x${string}`],
-          }).catch(() => BigInt(0)),
-          polygonClient.readContract({
-            address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
-            abi: USDC_ABI,
-            functionName: 'balanceOf',
-            args: [walletAddress as `0x${string}`],
-          }).catch(() => BigInt(0)),
-          arbitrumClient.readContract({
-            address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-            abi: USDC_ABI,
-            functionName: 'balanceOf',
-            args: [walletAddress as `0x${string}`],
-          }).catch(() => BigInt(0)),
-          avalancheClient.readContract({
-            address: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
-            abi: USDC_ABI,
-            functionName: 'balanceOf',
-            args: [walletAddress as `0x${string}`],
-          }).catch(() => BigInt(0))
-        ]);
+    // 1. Fetch live Unified Balance directly from Circle Gateway API
+    let gatewayData: any = null;
+    let gatewayBalanceSum = 0;
+    let gatewayPendingSum = 0;
+    const chainBreakdown: Array<{
+      domain: number;
+      chain: string;
+      confirmedBalance: string;
+      pendingBalance: string;
+    }> = [];
 
-        const arcDirectBalance = formatUnits(rawBalance, 18);
-        const directNum = parseFloat(arcDirectBalance);
-        
-        // Inject Base real on-chain balance
-        const baseUsdc = formatUnits(baseUsdcRaw as bigint, 6);
-        const baseIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Base');
-        if (baseIndex >= 0) {
-          unifiedKitData.chains[baseIndex].confirmedBalance = baseUsdc;
-        } else {
-          unifiedKitData.chains.push({
-            chain: 'Base',
-            confirmedBalance: baseUsdc,
-            hasPending: false
+    try {
+      const supportedDomains = [26, 6, 0, 7, 3, 1];
+      const circleRes = await fetch(`${CIRCLE_GATEWAY_API_URL}/v1/balances`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: 'USDC',
+          sources: supportedDomains.map((domain) => ({
+            domain,
+            depositor: targetAddress,
+          })),
+        }),
+        cache: 'no-store',
+      });
+
+      if (circleRes.ok) {
+        gatewayData = await circleRes.json();
+        const balances = gatewayData.balances || [];
+
+        for (const b of balances) {
+          const conf = parseFloat(b.balance || '0');
+          const pend = parseFloat(b.pendingBatch || '0');
+          gatewayBalanceSum += conf;
+          gatewayPendingSum += pend;
+
+          chainBreakdown.push({
+            domain: b.domain,
+            chain: DOMAIN_MAP[b.domain] || `Domain ${b.domain}`,
+            confirmedBalance: conf.toFixed(6),
+            pendingBalance: pend.toFixed(6),
           });
         }
-        
-        // Inject Ethereum real on-chain balance
-        const ethUsdc = formatUnits(ethUsdcRaw as bigint, 6);
-        const ethIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Ethereum');
-        if (ethIndex >= 0) {
-          unifiedKitData.chains[ethIndex].confirmedBalance = ethUsdc;
-        } else {
-          unifiedKitData.chains.push({
-            chain: 'Ethereum',
-            confirmedBalance: ethUsdc,
-            hasPending: false
-          });
-        }
-        
-        // Inject Polygon real on-chain balance
-        const polygonUsdc = formatUnits(polygonUsdcRaw as bigint, 6);
-        const polygonIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Polygon');
-        if (polygonIndex >= 0) {
-          unifiedKitData.chains[polygonIndex].confirmedBalance = polygonUsdc;
-        } else {
-          unifiedKitData.chains.push({
-            chain: 'Polygon',
-            confirmedBalance: polygonUsdc,
-            hasPending: false
-          });
-        }
-
-        // Inject Arbitrum real on-chain balance
-        const arbUsdc = formatUnits(arbUsdcRaw as bigint, 6);
-        const arbIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Arbitrum');
-        if (arbIndex >= 0) {
-          unifiedKitData.chains[arbIndex].confirmedBalance = arbUsdc;
-        } else {
-          unifiedKitData.chains.push({
-            chain: 'Arbitrum',
-            confirmedBalance: arbUsdc,
-            hasPending: false
-          });
-        }
-
-        // Inject Avalanche real on-chain balance
-        const avaxUsdc = formatUnits(avaxUsdcRaw as bigint, 6);
-        const avaxIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Avalanche');
-        if (avaxIndex >= 0) {
-          unifiedKitData.chains[avaxIndex].confirmedBalance = avaxUsdc;
-        } else {
-          unifiedKitData.chains.push({
-            chain: 'Avalanche',
-            confirmedBalance: avaxUsdc,
-            hasPending: false
-          });
-        }
-        
-        // Read Gateway Deposits
-        const deposits = await getGatewayDeposits();
-        let gatewayDeposit = deposits[walletAddress.toLowerCase()] || 0;
-
-        // Inject native balance + gateway deposits as Arc_Mainnet balance for UI proxy
-        const arcAmount = directNum > 0 ? directNum : 0;
-        const totalArc = arcAmount + gatewayDeposit;
-        
-        if (totalArc > 0) {
-          const arcChainIndex = unifiedKitData.chains.findIndex(c => c.chain === 'Arc_Mainnet');
-          if (arcChainIndex >= 0) {
-            unifiedKitData.chains[arcChainIndex].confirmedBalance = totalArc.toFixed(4);
-          } else {
-            unifiedKitData.chains.push({
-              chain: 'Arc_Mainnet',
-              confirmedBalance: totalArc.toFixed(4),
-              hasPending: false
-            });
-          }
-        }
-        
-        // Sum up the real balances across all chains for total
-        const totalAvailable = unifiedKitData.chains.reduce((acc, curr) => acc + parseFloat(curr.confirmedBalance || '0'), 0).toFixed(4);
-
-        return NextResponse.json({
-          configured: true,
-          walletType: 'metamask',
-          walletAddress,
-          currency: 'USDC',
-          available: totalAvailable,
-          pending: unifiedKitData?.totalPendingBalance || '0.0000',
-          arcDirectBalance: '0',
-          unifiedKit: {
-            totalConfirmed: unifiedKitData.totalConfirmedBalance,
-            totalPending: unifiedKitData.totalPendingBalance,
-            chains: unifiedKitData.chains,
-          },
-          network: 'Arc Mainnet',
-          updatedAt: new Date().toISOString(),
-        });
-      } catch (rpcErr: any) {
-        console.error('Arc Unified Balance query error:', rpcErr);
-        return NextResponse.json(
-          { error: 'Unable to query on-chain balance on Arc Mainnet.' },
-          { status: 502 }
-        );
       }
+    } catch (circleErr) {
+      console.warn('[Unified Balance API] Circle Gateway API query warning:', circleErr);
     }
 
-    return NextResponse.json(
-      { error: 'Invalid wallet parameters.' },
-      { status: 400 }
-    );
+    // 2. Fetch live on-chain balances across all supported source chains
+    let nativeGasBalance = '0.0000';
+    const walletBalances: Record<string, { network: string; chainId: number; usdcTokenBalance: string; usdcContract: string }> = {};
+
+    try {
+      // Query Arc gas balance
+      const rawGas = await arcRpcClient.getBalance({ address: targetAddress as `0x${string}` }).catch(() => 0n);
+      nativeGasBalance = formatUnits(rawGas, 18);
+
+      // Query on-chain USDC balances for all source chains in parallel
+      await Promise.all(
+        Object.entries(SOURCE_CHAINS).map(async ([key, conf]) => {
+          try {
+            const res = await fetch(conf.rpcUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                id: 1,
+                method: 'eth_call',
+                params: [
+                  {
+                    to: conf.usdcAddress,
+                    data: `0x70a08231000000000000000000000000${targetAddress.slice(2)}`,
+                  },
+                  'latest',
+                ],
+              }),
+              signal: AbortSignal.timeout(3500),
+            });
+            const json = await res.json();
+            const rawVal = BigInt(json?.result || '0');
+            const decimals = conf.chainId === 5042 ? 6 : 4;
+            const formatted = (Number(rawVal) / 1_000_000).toFixed(decimals);
+            walletBalances[key] = {
+              network: conf.name,
+              chainId: conf.chainId,
+              usdcTokenBalance: formatted,
+              usdcContract: conf.usdcAddress,
+            };
+          } catch {
+            walletBalances[key] = {
+              network: conf.name,
+              chainId: conf.chainId,
+              usdcTokenBalance: '0.0000',
+              usdcContract: conf.usdcAddress,
+            };
+          }
+        })
+      );
+    } catch (rpcErr) {
+      console.warn('[Unified Balance API] RPC multi-chain read warning:', rpcErr);
+    }
+
+    const availableFormatted = gatewayBalanceSum.toFixed(6);
+    const pendingFormatted = gatewayPendingSum.toFixed(6);
+
+    const arcUsdc = walletBalances['Arc']?.usdcTokenBalance || '0.0000';
+
+    return NextResponse.json({
+      success: true,
+      walletAddress: targetAddress,
+      isSeller: targetAddress.toLowerCase() === sellerAddress.toLowerCase(),
+      currency: 'USDC',
+      // Real Circle Gateway Unified Balance (Deposited into Gateway)
+      available: availableFormatted,
+      pending: pendingFormatted,
+      totalUnifiedBalance: (gatewayBalanceSum + gatewayPendingSum).toFixed(6),
+      isGatewayFunded: gatewayBalanceSum > 0,
+      breakdown: chainBreakdown,
+      // Real on-chain Arc balances (backward compatibility)
+      onChain: {
+        network: 'Arc Mainnet',
+        chainId: 5042,
+        usdcTokenBalance: arcUsdc,
+        nativeGasBalance: nativeGasBalance,
+        usdcContract: ARC_USDC_CONTRACT,
+      },
+      // Multi-chain personal wallet balances across all supported source chains
+      walletBalances,
+      gatewayInfrastructure: {
+        gatewayWallet: CIRCLE_GATEWAY_WALLET,
+        gatewayMinter: CIRCLE_GATEWAY_MINTER,
+        arcDomain: 26,
+        baseDomain: 6,
+        apiEndpoint: CIRCLE_GATEWAY_API_URL,
+      },
+      updatedAt: new Date().toISOString(),
+    });
   } catch (error: any) {
-    console.error('Unified Balance route error:', error);
+    console.error('[Unified Balance API] Route error:', error);
     return NextResponse.json(
-      { error: 'Server error retrieving Unified Balance.' },
+      { error: 'Failed to retrieve Circle Unified Balance', details: error.message },
       { status: 500 }
     );
   }

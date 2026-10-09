@@ -1,7 +1,28 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { CIRCLE_GATEWAY_API_URL } from '@/lib/arcConfig';
 
-export async function POST() {
-  return NextResponse.json({
-    isValid: true,
-  });
+export const dynamic = 'force-dynamic';
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    // Transparent proxy to official Circle Gateway Facilitator verify endpoint
+    const circleRes = await fetch(`${CIRCLE_GATEWAY_API_URL}/v1/x402/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await circleRes.json();
+    return NextResponse.json(data, { status: circleRes.status });
+  } catch (err: any) {
+    console.error('[Facilitator Verify Proxy] Error contacting Circle Gateway:', err);
+    return NextResponse.json(
+      { error: 'Circle Gateway facilitator verify endpoint error', details: err.message },
+      { status: 502 }
+    );
+  }
 }

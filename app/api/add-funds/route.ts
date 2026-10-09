@@ -1,142 +1,128 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-import { getArcKitSupportedChains } from '../../../lib/unifiedBalanceKit';
-import { getGatewayDeposits, setGatewayDeposits } from '../../../lib/kv';
+import {
+  ARC_CHAIN_ID,
+  ARC_USDC_CONTRACT,
+  CIRCLE_GATEWAY_WALLET,
+  CIRCLE_GATEWAY_MINTER,
+  CIRCLE_GATEWAY_DOMAIN,
+  CIRCLE_GATEWAY_API_URL,
+} from '@/lib/arcConfig';
 
 export const dynamic = 'force-dynamic';
 
-function isCircleApiKeyConfigured(): boolean {
-  const apiKey = process.env.CIRCLE_API_KEY;
-  if (!apiKey) return false;
-  if (apiKey === 'placeholder' || apiKey === 'get_from_console.circle.com') return false;
-  return true;
-}
-
-function isCircleOnrampAppConfigured(): boolean {
-  const appId = process.env.NEXT_PUBLIC_CIRCLE_APP_ID || process.env.CIRCLE_APP_ID;
-  if (!appId) return false;
-  if (appId === 'placeholder' || appId === 'get_from_console.circle.com') return false;
-  return true;
-}
-
 export async function GET() {
-  const hasApiKey = isCircleApiKeyConfigured();
-  const hasAppId = isCircleOnrampAppConfigured();
-  const kitInfo = getArcKitSupportedChains();
-
   return NextResponse.json({
-    fiatOnramp: {
-      configured: hasApiKey && hasAppId,
-      appId: process.env.NEXT_PUBLIC_CIRCLE_APP_ID || null,
-      supportedChains: ['Ethereum', 'Base', 'Polygon', 'Solana', 'Avalanche', 'Arbitrum'],
-      arcMainnetDirectSupport: false,
-      note: 'Circle Fiat Onramp provides card/bank checkout to supported networks. For Arc Mainnet, use the Arc Unified Balance Kit.',
-    },
-    unifiedBalanceKit: {
-      configured: true,
-      supportedChains: kitInfo.arcChains,
-      defaultSourceChains: ['Base', 'Ethereum'],
-      destinationChain: 'Arc_Mainnet',
-      note: 'Official @circle-fin/unified-balance-kit enables multi-chain USDC gateway deposits and unified balance routing directly to Arc.',
+    gatewayFunding: {
+      network: 'Arc Mainnet',
+      chainId: ARC_CHAIN_ID,
+      token: 'USDC',
+      tokenAddress: ARC_USDC_CONTRACT,
+      gatewayWalletContract: CIRCLE_GATEWAY_WALLET,
+      gatewayMinterContract: CIRCLE_GATEWAY_MINTER,
+      gatewayDomain: CIRCLE_GATEWAY_DOMAIN,
+      instructions: [
+        '1. Ensure you have USDC in your connected wallet on Arc Mainnet (or any Gateway source chain).',
+        '2. Deposit USDC directly to the Circle Gateway Wallet contract (0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE).',
+        '3. Circle Gateway indexes the deposit and updates your spendable Unified Balance.',
+        '4. Your Unified Balance is automatically used to pay for high-frequency x402 nanopayments without gas.',
+      ],
+      supportedChains: [
+        { chain: 'Arc', domain: 26, contract: CIRCLE_GATEWAY_WALLET },
+        { chain: 'Base', domain: 6, contract: CIRCLE_GATEWAY_WALLET },
+        { chain: 'Ethereum', domain: 0, contract: CIRCLE_GATEWAY_WALLET },
+        { chain: 'Polygon', domain: 7, contract: CIRCLE_GATEWAY_WALLET },
+        { chain: 'Arbitrum', domain: 3, contract: CIRCLE_GATEWAY_WALLET },
+        { chain: 'Avalanche', domain: 1, contract: CIRCLE_GATEWAY_WALLET },
+      ],
     },
   });
 }
 
+import { createPaymentRecord } from '@/lib/db';
+
 export async function POST(req: NextRequest) {
   try {
-    const { action, amount, walletAddress, walletType, network, sourceChain } = await req.json();
+    const body = await req.json();
+    const { action, walletAddress, amount, sourceChain, txHash } = body;
 
-    if (!walletAddress) {
+    if (!walletAddress || !walletAddress.startsWith('0x')) {
       return NextResponse.json(
-        { error: 'Missing wallet address. Connect a wallet to proceed.' },
+        { error: 'Valid 0x wallet address is required.' },
         { status: 400 }
       );
     }
 
-    // Action 1: Create Real Fiat Onramp Hosted Checkout Session
-    if (action === 'create_checkout_session') {
-      const hasApiKey = isCircleApiKeyConfigured();
-      const hasAppId = isCircleOnrampAppConfigured();
-
-      if (!hasApiKey || !hasAppId) {
+    if (action === 'get_deposit_params') {
+      const parsedAmount = parseFloat(amount || '1');
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
         return NextResponse.json(
-          { 
-            status: 'NOT_CONFIGURED',
-            error: 'Circle Onramp is not configured yet. CIRCLE_API_KEY and NEXT_PUBLIC_CIRCLE_APP_ID are required in environment.' 
-          },
-          { status: 503 }
+          { error: 'Valid positive amount required.' },
+          { status: 400 }
         );
       }
 
-      if (network === 'arc-mainnet' || !network) {
-        return NextResponse.json(
-          {
-            status: 'NETWORK_UNSUPPORTED',
-            error: 'Circle Fiat Onramp does not support direct credit card issuance directly on Arc Mainnet. Supported networks are Base, Ethereum, and Polygon. Please use Arc Unified Balance Kit to bridge.',
-          },
-          { status: 422 }
-        );
-      }
+      const atomicAmount = BigInt(Math.floor(parsedAmount * 1_000_000)).toString();
 
-      // If a supported network is selected and valid credentials exist, generate session
       return NextResponse.json({
-        status: 'CHECKOUT_READY',
-        sessionUrl: `https://ramp.circle.com/checkout?appId=${process.env.NEXT_PUBLIC_CIRCLE_APP_ID}&amount=${amount}&walletAddress=${walletAddress}&network=${network}`,
-        message: 'Circle Onramp checkout session generated.',
+        success: true,
+        depositTarget: {
+          to: CIRCLE_GATEWAY_WALLET,
+          tokenAddress: ARC_USDC_CONTRACT,
+          amount: parsedAmount.toString(),
+          atomicAmount,
+          chainId: ARC_CHAIN_ID,
+          network: 'Arc Mainnet',
+          domain: CIRCLE_GATEWAY_DOMAIN,
+        },
+        message: 'Send USDC transfer to Gateway Wallet to fund Unified Balance.',
       });
     }
 
-    // Action 2: Unified Balance Kit cross-chain allocation / deposit query
     if (action === 'unified_kit_deposit') {
-      
-      let deposits = await getGatewayDeposits();
-      
-      const current = deposits[walletAddress.toLowerCase()] || 0;
-      deposits[walletAddress.toLowerCase()] = current + parseFloat(amount);
-      await setGatewayDeposits(deposits);
+      const parsedAmount = parseFloat(amount || '0');
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        return NextResponse.json(
+          { error: 'Valid positive amount required.' },
+          { status: 400 }
+        );
+      }
+
+      const depositRecord = await createPaymentRecord({
+        requestId: `dep_${Date.now()}`,
+        paymentId: txHash || `dep_${Date.now()}_${crypto.randomUUID()}`,
+        payer: walletAddress,
+        seller: CIRCLE_GATEWAY_WALLET,
+        endpoint: '/deposit/unified-balance',
+        amount: parsedAmount.toString(),
+        amountUsd: `$${parsedAmount.toFixed(4)}`,
+        asset: ARC_USDC_CONTRACT,
+        network: sourceChain === 'Arc' ? 'eip155:5042' : `domain:${sourceChain}`,
+        scheme: 'gateway_deposit',
+        status: 'settled',
+        transactionHash: txHash || null,
+        metadata: {
+          sourceChain: sourceChain || 'Arc',
+          gatewayWallet: CIRCLE_GATEWAY_WALLET,
+          gatewayDomain: CIRCLE_GATEWAY_DOMAIN,
+        },
+      });
 
       return NextResponse.json({
         status: 'SUCCESS',
-        message: `Arc Unified Balance Kit deposit registered for ${walletAddress}. Target: Arc Mainnet via Circle Gateway.`,
-        amount,
-        targetChain: 'Arc_Mainnet',
-        sourceChain: sourceChain || 'Base',
+        txHash,
+        depositId: depositRecord.id,
+        message: `Successfully registered deposit of ${parsedAmount} USDC into Circle Gateway Unified Balance.`,
       });
     }
 
-    if (action === 'deduct_unified_balance') {
-      let deposits = await getGatewayDeposits();
-
-      const current = deposits[walletAddress.toLowerCase()] || 0;
-      const deductAmount = parseFloat(amount);
-      
-      if (current >= deductAmount) {
-        deposits[walletAddress.toLowerCase()] = current - deductAmount;
-        await setGatewayDeposits(deposits);
-        
-        return NextResponse.json({
-          status: 'SUCCESS',
-          message: `Successfully paid ${deductAmount} USDC from Gateway Balance.`,
-          remainingBalance: deposits[walletAddress.toLowerCase()]
-        });
-      } else {
-        return NextResponse.json({
-          status: 'INSUFFICIENT_FUNDS',
-          error: `Insufficient Gateway Balance. Have ${current} USDC, need ${deductAmount} USDC.`
-        }, { status: 402 });
-      }
-    }
-
     return NextResponse.json(
-      { error: `Unknown action: '${action}'. Expected 'create_checkout_session', 'unified_kit_deposit'.` },
+      { error: `Unknown action: '${action}'. Supported: 'get_deposit_params', 'unified_kit_deposit'.` },
       { status: 400 }
     );
   } catch (error: any) {
-    console.error('Onramp API error:', error);
+    console.error('[Add Funds API] Error:', error);
     return NextResponse.json(
-      { error: 'Funding request failed. Please check server logs.' },
+      { error: 'Failed to process deposit request', details: error.message },
       { status: 500 }
     );
   }

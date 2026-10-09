@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { useAccount, useSendTransaction, useWriteContract, useSwitchChain } from 'wagmi';
-import { parseEther, parseUnits } from 'viem';
+import { useAccount, useSendTransaction, useWriteContract, useSwitchChain, usePublicClient } from 'wagmi';
+import { parseEther, parseUnits, parseAbi, maxUint256, createPublicClient, http } from 'viem';
 import UsdcBalance from '../../components/UsdcBalance';
 import WalletConnector from '../../components/WalletConnector';
+import MobileMenu from '../../components/MobileMenu';
 import { 
   Wallet, 
   ArrowLeft, 
@@ -51,7 +52,7 @@ type PaymentState =
 
 type FundingMode = 'unified_kit' | 'fiat_onramp';
 
-const PRESET_AMOUNTS = ['10', '25', '50', '100'];
+const PRESET_AMOUNTS = ['0.005', '0.01', '0.10', '1'];
 
 export default function OnrampPage() {
   const { address, isConnected, chain } = useAccount();
@@ -59,16 +60,18 @@ export default function OnrampPage() {
 
 
   const [unifiedBalance, setUnifiedBalance] = useState<string | null>(null);
+  const [onChainBalance, setOnChainBalance] = useState<string | null>(null);
+  const [walletBalances, setWalletBalances] = useState<Record<string, string>>({});
   const [unifiedKitData, setUnifiedKitData] = useState<UnifiedKitData | null>(null);
   const [balanceConfigured, setBalanceConfigured] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Funding Rails Mode
   const [fundingMode, setFundingMode] = useState<FundingMode>('unified_kit');
-  const [sourceChain, setSourceChain] = useState<string>('Base');
+  const [sourceChain, setSourceChain] = useState<string>('Arc');
 
   // Amount State
-  const [selectedPreset, setSelectedPreset] = useState<string>('25');
+  const [selectedPreset, setSelectedPreset] = useState<string>('0.01');
   const [customAmount, setCustomAmount] = useState<string>('');
   const [amountError, setAmountError] = useState<string>('');
 
@@ -76,10 +79,6 @@ export default function OnrampPage() {
   const [paymentState, setPaymentState] = useState<PaymentState>('IDLE');
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-
-  // Faucet secondary state (explicitly isolated for testnet developers)
-  const [faucetLoading, setFaucetLoading] = useState(false);
-  const [faucetMessage, setFaucetMessage] = useState<string>('');
 
   // Server Configuration Info
   const [configInfo, setConfigInfo] = useState<{
@@ -124,6 +123,18 @@ export default function OnrampPage() {
         }
       } else {
         setUnifiedBalance('0.0000');
+      }
+
+      if (data?.walletBalances) {
+        const parsed: Record<string, string> = {};
+        for (const [k, v] of Object.entries(data.walletBalances as Record<string, any>)) {
+          parsed[k] = v.usdcTokenBalance || '0.0000';
+        }
+        setWalletBalances(parsed);
+      }
+
+      if (data?.onChain?.usdcTokenBalance) {
+        setOnChainBalance(data.onChain.usdcTokenBalance);
       }
 
       if (data?.unifiedKit) {
@@ -179,6 +190,7 @@ export default function OnrampPage() {
   const walletType = isConnected ? 'MetaMask' : 'None';
   const { sendTransactionAsync } = useSendTransaction();
   const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
   const hasActiveWallet = Boolean(isConnected && address);
 
   // Display Unified Balance
@@ -245,10 +257,14 @@ export default function OnrampPage() {
     setStatusMessage(`Initiating Arc Unified Balance Kit allocation from ${sourceChain.replace('_', ' ')}...`);
 
     try {
-      let usdcAddress = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // Base Default
-      let targetChainId = 8453; // Base Default
+      let usdcAddress = '0x3600000000000000000000000000000000000000'; // Arc Mainnet Default
+      let targetChainId = 5042; // Arc Mainnet
 
       switch (sourceChain) {
+        case 'Arc':
+          usdcAddress = '0x3600000000000000000000000000000000000000';
+          targetChainId = 5042;
+          break;
         case 'Base':
           usdcAddress = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
           targetChainId = 8453;
@@ -278,22 +294,77 @@ export default function OnrampPage() {
       }
 
       setPaymentState('PENDING');
-      setStatusMessage('Please confirm the USDC deposit transaction in your wallet...');
+      const amountUnits = parseUnits(effectiveAmount, 6);
+      const gatewayWalletAddress = '0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE';
 
-      const USDC_ABI = [{ name: 'transfer', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ type: 'bool' }] }] as const;
-      
-      const txHash = await writeContractAsync({
-        address: usdcAddress as `0x${string}`,
-        abi: USDC_ABI,
-        chainId: targetChainId,
-        functionName: 'transfer',
-        args: ['0xfd4960F33670f3477ebe817B184dd59fC4961437', parseUnits(effectiveAmount, 6)], // Treasury Address
+      const TARGET_RPCS: Record<number, string> = {
+        5042: 'https://rpc.mainnet.arc.io',
+        8453: 'https://base-rpc.publicnode.com',
+        137: 'https://polygon-bor-rpc.publicnode.com',
+        1: 'https://ethereum-rpc.publicnode.com',
+        42161: 'https://arbitrum-one-rpc.publicnode.com',
+        43114: 'https://avalanche-c-chain-rpc.publicnode.com',
+      };
+
+      const targetRpc = TARGET_RPCS[targetChainId] || 'https://base-rpc.publicnode.com';
+      const targetClient = createPublicClient({
+        transport: http(targetRpc, { timeout: 6000 }),
       });
 
-      setStatusMessage(`Transaction submitted! Hash: ${txHash.slice(0, 10)}... waiting for confirmation`);
+      // Step 1: Check existing USDC allowance for Circle Gateway Wallet on the TARGET chain
+      let currentAllowance = 0n;
+      try {
+        currentAllowance = await targetClient.readContract({
+          address: usdcAddress as `0x${string}`,
+          abi: parseAbi(['function allowance(address, address) view returns (uint256)']),
+          functionName: 'allowance',
+          args: [activeAddress as `0x${string}`, gatewayWalletAddress],
+        });
+      } catch (e) {
+        console.warn('Could not read allowance on target chain:', e);
+      }
+
+      if (currentAllowance < amountUnits) {
+        setStatusMessage(`Step 1/2: Please approve Circle Gateway Wallet to spend USDC on ${sourceChain.replace('_', ' ')}...`);
+        const approveTx = await writeContractAsync({
+          address: usdcAddress as `0x${string}`,
+          abi: parseAbi(['function approve(address spender, uint256 amount) returns (bool)']),
+          chainId: targetChainId,
+          functionName: 'approve',
+          args: [gatewayWalletAddress, maxUint256],
+        });
+
+        setStatusMessage(`Waiting for USDC approval confirmation on ${sourceChain.replace('_', ' ')}...`);
+        try {
+          await Promise.race([
+            targetClient.waitForTransactionReceipt({ hash: approveTx, timeout: 5000 }),
+            new Promise((r) => setTimeout(r, 2500)),
+          ]);
+        } catch {
+          // Bounded wait
+        }
+      }
+
+      // Step 2: Call official deposit() function on Circle Gateway Wallet contract
+      setStatusMessage('Step 2/2: Confirming deposit into Circle Gateway Wallet contract in Rabby/wallet...');
+      const txHash = await writeContractAsync({
+        address: gatewayWalletAddress,
+        abi: parseAbi(['function deposit(address token, uint256 amount) external']),
+        chainId: targetChainId,
+        functionName: 'deposit',
+        args: [usdcAddress as `0x${string}`, amountUnits],
+      });
+
+      setStatusMessage(`Deposit submitted to Circle Gateway! Hash: ${txHash.slice(0, 10)}...`);
       
-      // Wait a moment for UX
-      await new Promise(r => setTimeout(r, 2000));
+      try {
+        await Promise.race([
+          targetClient.waitForTransactionReceipt({ hash: txHash, timeout: 6000 }),
+          new Promise((r) => setTimeout(r, 2000)),
+        ]);
+      } catch {
+        // Bounded wait
+      }
 
       const res = await fetch('/api/add-funds', {
         method: 'POST',
@@ -376,40 +447,6 @@ export default function OnrampPage() {
     }
   };
 
-  // Secondary Isolated Developer Faucet
-  const handleDevFaucetRequest = async () => {
-    if (!hasActiveWallet) {
-      setFaucetMessage('Connect your wallet first.');
-      return;
-    }
-
-    setFaucetLoading(true);
-    setFaucetMessage('Requesting testnet tokens from Circle Faucet...');
-
-    try {
-      const res = await fetch('/api/add-funds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'testnet_funding',
-          walletAddress: activeAddress,
-          walletType,
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.status === 'SUCCESS') {
-        setFaucetMessage('Testnet USDC requested successfully! Waiting for on-chain block...');
-        await handleRefreshBalance();
-      } else {
-        setFaucetMessage(data.error || 'Faucet request failed.');
-      }
-    } catch {
-      setFaucetMessage('Faucet request could not be completed.');
-    } finally {
-      setFaucetLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-black text-slate-200">
@@ -444,16 +481,8 @@ export default function OnrampPage() {
               Add Funds
             </Link>
 
-            <a 
-              href="https://faucet.circle.com" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="relative inline-flex items-center justify-center px-3.5 py-1.5 font-black text-white bg-gradient-to-b from-red-500 to-red-600 rounded-xl shadow-[0_4px_0_rgb(153,27,27)] hover:from-red-400 hover:to-red-500 transition-all text-[10px] sm:text-xs border border-red-400/50 hidden md:inline-flex"
-            >
-              FAUCET
-            </a>
-
             <UsdcBalance />
+            <MobileMenu />
           </div>
         </div>
       </header>
@@ -579,66 +608,137 @@ export default function OnrampPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setSourceChain('Base')}
+                      onClick={() => setSourceChain('Arc')}
                       className={`p-3 rounded-xl border text-left transition-all ${
-                        sourceChain === 'Base'
-                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
+                        sourceChain === 'Arc'
+                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]'
                           : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="text-xs font-bold text-white">Base</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 6</div>
+                      <div className="text-xs font-bold text-white flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                          Arc Mainnet
+                        </span>
+                        {walletBalances['Arc'] && (
+                          <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                            {parseFloat(walletBalances['Arc']).toFixed(4)} USDC
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5">Circle Gateway Domain 26</div>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSourceChain('Ethereum')}
+                      onClick={() => setSourceChain('Base')}
                       className={`p-3 rounded-xl border text-left transition-all ${
+                        sourceChain === 'Base'
+                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                          : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-white flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-blue-400"></span>
+                          Base
+                        </span>
+                        {walletBalances['Base'] && (
+                          <span className="text-[10px] text-blue-400 font-mono font-bold">
+                            {parseFloat(walletBalances['Base']).toFixed(4)} USDC
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5">Circle Gateway Domain 6</div>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setSourceChain('Ethereum')}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
                         sourceChain === 'Ethereum'
                           ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
                           : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="text-xs font-bold text-white">Ethereum</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 0</div>
+                      <div className="text-xs font-bold text-white flex items-center justify-between">
+                        <span>Ethereum</span>
+                        {walletBalances['Ethereum'] && parseFloat(walletBalances['Ethereum']) > 0 && (
+                          <span className="text-[9.5px] text-cyan-400 font-mono font-bold">
+                            {parseFloat(walletBalances['Ethereum']).toFixed(4)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Domain 0</div>
                     </button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 mt-3">
                     <button
                       type="button"
                       onClick={() => setSourceChain('Polygon')}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
                         sourceChain === 'Polygon'
-                          ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
+                          ? 'bg-purple-950/40 border-purple-500/50 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]'
                           : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="text-xs font-bold text-white">Polygon</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 7</div>
+                      <div className="text-xs font-bold text-white flex items-center justify-between">
+                        <span>Polygon</span>
+                        {walletBalances['Polygon'] && (
+                          <span className="text-[9.5px] text-purple-400 font-mono font-bold">
+                            {parseFloat(walletBalances['Polygon']).toFixed(4)} USDC
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Domain 7</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setSourceChain('Arbitrum')}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
                         sourceChain === 'Arbitrum'
                           ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
                           : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="text-xs font-bold text-white">Arbitrum</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 3</div>
+                      <div className="text-xs font-bold text-white flex items-center justify-between">
+                        <span>Arbitrum</span>
+                        {walletBalances['Arbitrum'] && parseFloat(walletBalances['Arbitrum']) > 0 && (
+                          <span className="text-[9.5px] text-blue-400 font-mono font-bold">
+                            {parseFloat(walletBalances['Arbitrum']).toFixed(4)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Domain 3</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setSourceChain('Avalanche')}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
                         sourceChain === 'Avalanche'
                           ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
                           : 'bg-black/40 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="text-xs font-bold text-white">Avalanche</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Circle Gateway Domain 1</div>
+                      <div className="text-xs font-bold text-white flex items-center justify-between">
+                        <span>Avalanche</span>
+                        {walletBalances['Avalanche'] && parseFloat(walletBalances['Avalanche']) > 0 && (
+                          <span className="text-[9.5px] text-red-400 font-mono font-bold">
+                            {parseFloat(walletBalances['Avalanche']).toFixed(4)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Domain 1</div>
                     </button>
+                  </div>
+                </div>
+
+                {/* Explanation Banner */}
+                <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs text-slate-300 leading-relaxed flex items-start gap-2.5 mb-6">
+                  <Info size={16} className="text-cyan-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-white">How Circle Gateway Unified Balance Works:</span>
+                    <p className="mt-0.5 text-slate-400 text-[11px]">
+                      USDC in your personal Base or Arc wallet is held directly by your address. To become part of your <span className="text-cyan-300 font-semibold">Circle Gateway Unified Balance</span>, you must deposit it into the official Circle Gateway contract (<span className="text-cyan-400 font-mono">0x7777...00eE</span>). Once deposited, it is unified across chains for instant, zero-gas nanopayments.
+                    </p>
                   </div>
                 </div>
 
@@ -668,18 +768,37 @@ export default function OnrampPage() {
                 </div>
 
                 <div className="pt-2">
-                  <label className="block text-[11px] uppercase font-bold tracking-wider text-slate-500 mb-1.5">
-                    Or Enter Custom Amount
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-[11px] uppercase font-bold tracking-wider text-slate-500">
+                      Or Enter Custom Amount
+                    </label>
+                    {(() => {
+                      const activeChainBal = walletBalances[sourceChain] ?? (sourceChain === 'Arc' ? onChainBalance : '0');
+                      if (!activeChainBal || parseFloat(activeChainBal) <= 0) return null;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const maxVal = parseFloat(activeChainBal);
+                            const safeVal = Math.max(0, maxVal > 0.002 && sourceChain === 'Arc' ? maxVal - 0.002 : maxVal).toFixed(4);
+                            handleAmountChange(safeVal);
+                          }}
+                          className="text-[11px] text-cyan-400 hover:text-cyan-300 font-mono underline decoration-dotted"
+                        >
+                          {sourceChain} Wallet: {parseFloat(activeChainBal).toFixed(4)} USDC (Max)
+                        </button>
+                      );
+                    })()}
+                  </div>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold font-mono">
                       $
                     </span>
                     <input
                       type="number"
-                      min="0.01"
+                      min="0.0001"
                       step="any"
-                      placeholder="Custom amount (e.g. 15.50)"
+                      placeholder="Custom amount (e.g. 0.005)"
                       value={customAmount}
                       onChange={(e) => handleAmountChange(e.target.value)}
                       className={`w-full bg-black/70 border rounded-xl px-4 py-3 pl-8 text-sm text-white font-mono placeholder:text-slate-600 focus:outline-none focus:ring-1 transition-all ${
@@ -705,7 +824,7 @@ export default function OnrampPage() {
               <div className="bg-black/60 rounded-xl p-4 border border-slate-800/80 space-y-2 mb-6">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-400">Target Deposit</span>
-                  <span className="font-mono font-bold text-white">${parseFloat(effectiveAmount || '0').toFixed(2)} USDC</span>
+                  <span className="font-mono font-bold text-white">${effectiveAmount || '0.00'} USDC</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-400">Payment Rails</span>
@@ -771,7 +890,7 @@ export default function OnrampPage() {
                     ) : (
                       <>
                         <Sparkles size={16} />
-                        Deposit ${parseFloat(effectiveAmount || '0').toFixed(2)} USDC to Arc Unified Balance
+                        Deposit ${effectiveAmount || '0.00'} USDC to Arc Unified Balance
                       </>
                     )}
                   </button>
