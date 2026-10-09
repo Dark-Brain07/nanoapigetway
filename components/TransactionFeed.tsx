@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, Zap, CheckCircle2 } from 'lucide-react';
+import { getExplorerForTx } from '@/lib/chainExplorers';
 
 interface TransactionItem {
   id: string;
@@ -15,6 +16,8 @@ interface TransactionItem {
   status: string;
   network?: string;
   error?: string | null;
+  sourceChain?: string;
+  metadata?: Record<string, any> | null;
 }
 
 export default function TransactionFeed() {
@@ -100,15 +103,24 @@ export default function TransactionFeed() {
                     [GATEWAY SETTLED] {truncatedId}
                   </span>
                 ) : (
-                  <a
-                    href={`https://explorer.arc.io/tx/${tx.transactionHash}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-cyan-400 hover:text-cyan-200 text-[10px] flex items-center gap-1 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50 transition-colors"
-                    title="View on Arc Explorer"
-                  >
-                    [ARC ON-CHAIN] {truncatedId} <ArrowUpRight size={10} />
-                  </a>
+                  (() => {
+                    const explorer = getExplorerForTx(
+                      tx.transactionHash || '',
+                      tx.network,
+                      tx.sourceChain || tx.metadata?.sourceChain
+                    );
+                    return (
+                      <a
+                        href={explorer.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`${explorer.badgeClass} text-[10px] flex items-center gap-1 px-2 py-0.5 rounded border transition-colors`}
+                        title={`View on ${explorer.name}`}
+                      >
+                        {explorer.badgeLabel} {truncatedId} <ArrowUpRight size={10} />
+                      </a>
+                    );
+                  })()
                 )}
                 <div className="text-slate-500 text-[10px]">
                   {tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString() : 'Just now'}

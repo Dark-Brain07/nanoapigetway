@@ -87,6 +87,20 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      const chainInfoMap: Record<string, { network: string; domain: number }> = {
+        Arc: { network: 'eip155:5042', domain: 26 },
+        Base: { network: 'eip155:8453', domain: 6 },
+        Polygon: { network: 'eip155:137', domain: 7 },
+        Ethereum: { network: 'eip155:1', domain: 0 },
+        Arbitrum: { network: 'eip155:42161', domain: 3 },
+        Avalanche: { network: 'eip155:43114', domain: 1 },
+      };
+
+      const chainConf = chainInfoMap[sourceChain] || {
+        network: sourceChain ? `domain:${sourceChain}` : 'eip155:5042',
+        domain: CIRCLE_GATEWAY_DOMAIN,
+      };
+
       const depositRecord = await createPaymentRecord({
         requestId: `dep_${Date.now()}`,
         paymentId: txHash || `dep_${Date.now()}_${crypto.randomUUID()}`,
@@ -96,14 +110,14 @@ export async function POST(req: NextRequest) {
         amount: parsedAmount.toString(),
         amountUsd: `$${parsedAmount.toFixed(4)}`,
         asset: ARC_USDC_CONTRACT,
-        network: sourceChain === 'Arc' ? 'eip155:5042' : `domain:${sourceChain}`,
+        network: chainConf.network,
         scheme: 'gateway_deposit',
         status: 'settled',
         transactionHash: txHash || null,
         metadata: {
           sourceChain: sourceChain || 'Arc',
           gatewayWallet: CIRCLE_GATEWAY_WALLET,
-          gatewayDomain: CIRCLE_GATEWAY_DOMAIN,
+          gatewayDomain: chainConf.domain,
         },
       });
 
@@ -111,6 +125,8 @@ export async function POST(req: NextRequest) {
         status: 'SUCCESS',
         txHash,
         depositId: depositRecord.id,
+        network: chainConf.network,
+        sourceChain: sourceChain || 'Arc',
         message: `Successfully registered deposit of ${parsedAmount} USDC into Circle Gateway Unified Balance.`,
       });
     }

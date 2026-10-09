@@ -14,6 +14,7 @@ import {
 import UsdcBalance from '@/components/UsdcBalance';
 import WalletConnector from '@/components/WalletConnector';
 import MobileMenu from '@/components/MobileMenu';
+import { getExplorerForTx } from '@/lib/chainExplorers';
 
 interface ChatMessage {
   role: 'assistant' | 'user';
@@ -592,14 +593,20 @@ export default function ChatPage() {
                   {msg.txHash && (
                     <div className="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-xs">
                       <span className="text-emerald-400 font-mono text-[11px]">Paid: {msg.method || 'Arc Mainnet'}</span>
-                      <a
-                        href={`https://explorer.arc.io/tx/${msg.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-400 hover:text-cyan-300 font-mono text-[11px] flex items-center gap-1 underline"
-                      >
-                        {msg.txHash.slice(0, 10)}...{msg.txHash.slice(-6)} ↗
-                      </a>
+                      {(() => {
+                        const exp = getExplorerForTx(msg.txHash, null, msg.method);
+                        return (
+                          <a
+                            href={exp.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-400 hover:text-cyan-300 font-mono text-[11px] flex items-center gap-1 underline"
+                            title={`View on ${exp.name}`}
+                          >
+                            {msg.txHash.slice(0, 10)}...{msg.txHash.slice(-6)} ↗
+                          </a>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

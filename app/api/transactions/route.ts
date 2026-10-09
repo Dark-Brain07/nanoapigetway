@@ -38,6 +38,8 @@ export async function GET(req: NextRequest) {
       scheme: r.scheme,
       status: r.status,
       error: r.error || null,
+      metadata: r.metadata || null,
+      sourceChain: (r.metadata as any)?.sourceChain || undefined,
     }));
 
     return NextResponse.json({

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { ARC_CHAIN_ID, CIRCLE_GATEWAY_WALLET, CIRCLE_BATCHING_NAME, CIRCLE_BATCHING_VERSION, ARC_USDC_CONTRACT } from '@/lib/arcConfig';
+import { getExplorerForTx } from '@/lib/chainExplorers';
 
 function ResultVisualizer({ endpoint, data }: { endpoint: string; data: any }) {
   if (data.error) {
@@ -833,14 +834,24 @@ export default function ApiCard({
                     <div className="flex items-center gap-2 text-cyan-400 text-xs font-semibold tracking-wide uppercase">
                       <CheckCircle2 size={16} /> Paid via Arc Mainnet Direct Transfer
                     </div>
-                    <a
-                      href={`https://explorer.arc.io/tx/${result._paymentInfo.transactionHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-300 hover:text-cyan-100 bg-cyan-950/60 hover:bg-cyan-900/60 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 font-mono border border-cyan-700/50 transition-colors"
-                    >
-                      [ARC ON-CHAIN] {result._paymentInfo.transactionHash?.slice(0, 10)}...{result._paymentInfo.transactionHash?.slice(-6)} ↗
-                    </a>
+                    {(() => {
+                      const exp = getExplorerForTx(
+                        result._paymentInfo.transactionHash || '',
+                        result._paymentInfo.network || 'eip155:5042',
+                        'Arc'
+                      );
+                      return (
+                        <a
+                          href={exp.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-300 hover:text-cyan-100 bg-cyan-950/60 hover:bg-cyan-900/60 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 font-mono border border-cyan-700/50 transition-colors"
+                          title={`View on ${exp.name}`}
+                        >
+                          {exp.badgeLabel} {result._paymentInfo.transactionHash?.slice(0, 10)}...{result._paymentInfo.transactionHash?.slice(-6)} ↗
+                        </a>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="bg-gradient-to-r from-emerald-950/60 to-teal-900/40 border-t border-emerald-900/40 px-3 sm:px-5 py-3 sm:py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">

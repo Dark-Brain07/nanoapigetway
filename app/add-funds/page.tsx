@@ -23,6 +23,7 @@ import {
   Layers,
   Sparkles
 } from 'lucide-react';
+import { getExplorerForTx } from '@/lib/chainExplorers';
 
 
 
@@ -79,6 +80,7 @@ export default function OnrampPage() {
   const [paymentState, setPaymentState] = useState<PaymentState>('IDLE');
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [lastDepositTx, setLastDepositTx] = useState<{ hash: string; chain: string } | null>(null);
 
   // Server Configuration Info
   const [configInfo, setConfigInfo] = useState<{
@@ -383,7 +385,8 @@ export default function OnrampPage() {
 
       if (res.ok && data.status === 'SUCCESS') {
         setPaymentState('SUCCESS');
-        setStatusMessage(`Successfully registered ${effectiveAmount} USDC deposit into Arc Unified Balance (Gateway Domain 26).`);
+        setLastDepositTx({ hash: txHash, chain: sourceChain });
+        setStatusMessage(`Successfully registered ${effectiveAmount} USDC deposit from ${sourceChain} into Circle Gateway Unified Balance.`);
         await handleRefreshBalance();
       } else {
         setPaymentState('FAILED');
@@ -862,7 +865,27 @@ export default function OnrampPage() {
                   ) : (
                     <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
                   )}
-                  <div>{statusMessage}</div>
+                  <div className="flex-1">
+                    <div>{statusMessage}</div>
+                    {lastDepositTx && paymentState === 'SUCCESS' && (
+                      <div className="mt-2 pt-2 border-t border-green-800/40">
+                        {(() => {
+                          const exp = getExplorerForTx(lastDepositTx.hash, null, lastDepositTx.chain);
+                          return (
+                            <a
+                              href={exp.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 font-mono text-[11px] underline text-cyan-300 hover:text-cyan-100 transition-colors"
+                            >
+                              <span>View on {exp.name}: {lastDepositTx.hash.slice(0, 10)}...{lastDepositTx.hash.slice(-8)}</span>
+                              <ExternalLink size={12} />
+                            </a>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
