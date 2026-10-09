@@ -42,4 +42,8 @@ next-env.d.ts
 # persistent database files (keep local data ignored)
 /data/*.json
 !.gitkeep
-.vercel
+
+# ide & local tools
+.kilo
+.idea
+.vscode

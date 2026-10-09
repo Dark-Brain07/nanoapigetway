@@ -6,8 +6,14 @@
 [![Circle Gateway](https://img.shields.io/badge/Settlement-Circle%20Gateway%20Domain%2026-green.svg)](https://gateway-api.circle.com)
 [![x402 V2](https://img.shields.io/badge/Protocol-x402%20V2-orange.svg)](https://x402.org)
 [![USDC](https://img.shields.io/badge/Currency-USDC%20(6%20Decimals)-2775CA.svg)](https://circle.com/usdc)
+[![Live Production](https://img.shields.io/badge/Live%20Demo-nanoapigateway.vercel.app-cyan.svg)](https://nanoapigateway.vercel.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
+
+> **Live Deployment:** [https://nanoapigateway.vercel.app](https://nanoapigateway.vercel.app)  
+> **Interactive Agentic Chat:** [https://nanoapigateway.vercel.app/chat](https://nanoapigateway.vercel.app/chat)  
+> **Gateway Deposit Portal:** [https://nanoapigateway.vercel.app/add-funds](https://nanoapigateway.vercel.app/add-funds)
 
 ## 1. What is NanoAPI Gateway?
 
@@ -85,11 +91,20 @@ NanoAPI Gateway delivers true pay-per-use APIs where clients pay only for the ex
 
 Circle Gateway Unified Balance allows users to aggregate USDC liquidity across EVM networks (Arc, Base, Ethereum, Polygon, Arbitrum, Avalanche) into a single spendable balance.
 
-### Funding Workflow
-1. **User Wallet**: Connects Web3 wallet (MetaMask, Coinbase Wallet, etc.) to Arc Mainnet.
+### Funding Workflow & Cross-Chain Finality
+1. **User Wallet**: Connects Web3 wallet (MetaMask, Rabby, Coinbase Wallet) to Arc Mainnet or any supported source chain.
 2. **Gateway Deposit**: User transfers USDC directly to the official Circle Gateway Wallet contract (`0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE`).
 3. **Gateway Indexing**: Circle Gateway indexes the on-chain deposit event and updates the user's Unified Balance.
 4. **Instant Spending**: The user's Unified Balance is immediately available to authorize gasless x402 V2 nanopayments.
+
+| Source Chain | Domain | Confirmations Required | Confirmation Time | Notes |
+| :--- | :---: | :---: | :---: | :--- |
+| **Arc Mainnet** | `Domain 26` | **1 Block** | **~1–2s (Instant)** | Native chain; zero cross-chain delay |
+| **Avalanche** | `Domain 1` | **1 Block** | **~1–2s (Instant)** | Snowman sub-second finality |
+| **Polygon PoS** | `Domain 7` | **~128–256 Blocks** | **~5–8m** | Heimdall validator checkpoint milestones |
+| **Base** | `Domain 6` | **~200 Blocks** | **~7–10m** | OP Stack L1 batch posting finality |
+| **Arbitrum One** | `Domain 3` | **~1000 Blocks** | **~10–12m** | Nitro sequencer L1 rollup batch posting |
+| **Ethereum L1** | `Domain 0` | **64 Blocks** | **~12–15m** | 2 Casper FFG epochs for finality |
 
 ---
 
@@ -105,7 +120,7 @@ Pricing is defined and enforced strictly on the server in [`lib/arcConfig.ts`](f
 | `/api/ai-summary` | **$0.005** | `5000` | Real-time neural LLM document & data synthesis |
 | `/api/translate` | **$0.003** | `3000` | Real-time multi-lingual neural translation |
 | `/api/token-info` | **$0.001** | `1000` | Live on-chain ERC-20 contract introspection on Arc |
-| `/api/chat` | **$0.005** | `5000` | Autonomous conversational agent inference |
+| `/api/chat` | **$0.0001** | `100` | Autonomous conversational agent inference |
 
 ---
 
@@ -199,3 +214,13 @@ npm test
 - **Compromised Credentials Rotated**: Legacy hackathon credentials committed to git history have been marked for revocation and rotated.
 - **Fail-Honest External APIs**: If an upstream API provider key is missing, endpoints fail honestly with an upstream error (HTTP 502/503) rather than returning mock/fake responses.
 - **Zero Mock Settlement**: All payment verifications execute through the official Circle Gateway Facilitator (`https://gateway-api.circle.com/v1/x402/settle`).
+
+---
+
+## 11. Technical Documentation
+
+For in-depth protocol architecture, sequence diagrams, and cross-chain mechanics:
+- [Architecture & Payment Protocol Guide](docs/ARCHITECTURE_AND_PAYMENT_GUIDE.md)
+- [Official Circle Gateway Documentation](https://developers.circle.com/gateway)
+- [x402 Payment Required Protocol](https://x402.org)
+- [Arc Network Documentation](https://docs.arc.io)

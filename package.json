@@ -1,14 +1,25 @@
 {
   "name": "nanoapigateway",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Production sub-cent AI API payments infrastructure on Arc Mainnet with Circle Gateway Unified Balance and x402 V2 protocol.",
+  "license": "MIT",
+  "keywords": [
+    "arc-mainnet",
+    "circle-gateway",
+    "unified-balance",
+    "x402",
+    "micropayments",
+    "usdc",
+    "ai-agent"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test_x402_gateway.mjs"
+    "test": "node scripts/test_x402_gateway.mjs",
+    "test:rails": "node scripts/test_dual_rails.mjs"
   },
   "dependencies": {
     "@circle-fin/adapter-viem-v2": "^1.18.0",
