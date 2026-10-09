@@ -21,7 +21,8 @@ import {
   Droplets,
   Info,
   Layers,
-  Sparkles
+  Sparkles,
+  Clock
 } from 'lucide-react';
 import { getExplorerForTx } from '@/lib/chainExplorers';
 
@@ -176,6 +177,18 @@ export default function OnrampPage() {
     };
 
     fetchConfig();
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const chainParam = params.get('chain');
+      if (chainParam) {
+        const supported = ['Arc', 'Base', 'Ethereum', 'Polygon', 'Arbitrum', 'Avalanche'];
+        const matched = supported.find(c => c.toLowerCase() === chainParam.toLowerCase());
+        if (matched) {
+          setSourceChain(matched);
+        }
+      }
+    }
 
     const handleWalletChanged = () => {
       loadWalletAndBalance();
@@ -386,7 +399,11 @@ export default function OnrampPage() {
       if (res.ok && data.status === 'SUCCESS') {
         setPaymentState('SUCCESS');
         setLastDepositTx({ hash: txHash, chain: sourceChain });
-        setStatusMessage(`Successfully registered ${effectiveAmount} USDC deposit from ${sourceChain} into Circle Gateway Unified Balance.`);
+        if (sourceChain === 'Base') {
+          setStatusMessage(`Deposit of ${effectiveAmount} USDC confirmed on Base! Circle Gateway requires ~200 block confirmations (~7–10 min) for L2 finality before balance reflects in your Unified Balance.`);
+        } else {
+          setStatusMessage(`Successfully registered ${effectiveAmount} USDC deposit from ${sourceChain} into Circle Gateway Unified Balance.`);
+        }
         await handleRefreshBalance();
       } else {
         setPaymentState('FAILED');
@@ -629,7 +646,10 @@ export default function OnrampPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5">Circle Gateway Domain 26</div>
+                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5 flex items-center justify-between">
+                        <span>Domain 26</span>
+                        <span className="text-emerald-400 font-sans font-medium text-[9.5px]">1 Block (Instant)</span>
+                      </div>
                     </button>
                     <button
                       type="button"
@@ -651,7 +671,10 @@ export default function OnrampPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5">Circle Gateway Domain 6</div>
+                      <div className="text-[10px] text-cyan-400 font-mono mt-0.5 flex items-center justify-between">
+                        <span>Domain 6</span>
+                        <span className="text-amber-400 font-sans font-medium text-[9.5px]">~200 Blocks (~7-10m)</span>
+                      </div>
                     </button>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3">
@@ -672,7 +695,10 @@ export default function OnrampPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Domain 0</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
+                        <span>Domain 0</span>
+                        <span className="text-slate-300 font-sans text-[9px]">64 Blks (~12m)</span>
+                      </div>
                     </button>
                     <button
                       type="button"
@@ -691,7 +717,10 @@ export default function OnrampPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Domain 7</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
+                        <span>Domain 7</span>
+                        <span className="text-purple-300 font-sans text-[9px]">~128 Blks (~5m)</span>
+                      </div>
                     </button>
                     <button
                       type="button"
@@ -710,7 +739,10 @@ export default function OnrampPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Domain 3</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
+                        <span>Domain 3</span>
+                        <span className="text-sky-300 font-sans text-[9px]">~1000 Blks (~10m)</span>
+                      </div>
                     </button>
                     <button
                       type="button"
@@ -729,8 +761,103 @@ export default function OnrampPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">Domain 1</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
+                        <span>Domain 1</span>
+                        <span className="text-emerald-400 font-sans text-[9px]">1 Blk (Instant)</span>
+                      </div>
                     </button>
+                  </div>
+                </div>
+
+                {/* Confirmation & Finality Notice */}
+                <div className={`p-3.5 rounded-xl border mb-4 text-xs transition-all flex items-start gap-3 ${
+                  sourceChain === 'Base'
+                    ? 'bg-blue-950/30 border-blue-500/40'
+                    : sourceChain === 'Polygon'
+                    ? 'bg-purple-950/30 border-purple-500/40'
+                    : sourceChain === 'Ethereum'
+                    ? 'bg-slate-900/90 border-slate-600/50'
+                    : sourceChain === 'Arbitrum'
+                    ? 'bg-sky-950/30 border-sky-500/40'
+                    : 'bg-emerald-950/20 border-emerald-500/30'
+                }`}>
+                  <div className={`p-2 rounded-lg bg-black/60 border shrink-0 mt-0.5 ${
+                    sourceChain === 'Base' ? 'border-blue-500/40 text-blue-400' :
+                    sourceChain === 'Polygon' ? 'border-purple-500/40 text-purple-400' :
+                    sourceChain === 'Arbitrum' ? 'border-sky-500/40 text-sky-400' :
+                    sourceChain === 'Ethereum' ? 'border-slate-600/40 text-slate-300' :
+                    'border-emerald-500/40 text-emerald-400'
+                  }`}>
+                    <Clock size={16} />
+                  </div>
+                  <div className="space-y-1 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-white text-xs">
+                        {sourceChain} Gateway Confirmation Time:
+                      </span>
+                      {sourceChain === 'Base' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          ~200 Blocks (~7–10 min)
+                        </span>
+                      )}
+                      {sourceChain === 'Polygon' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          ~128–256 Blocks (~5–8 min)
+                        </span>
+                      )}
+                      {sourceChain === 'Ethereum' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-500/20 text-slate-200 border border-slate-500/30">
+                          64 Blocks (~12–15 min)
+                        </span>
+                      )}
+                      {sourceChain === 'Arbitrum' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                          ~1000 Blocks (~10–12 min)
+                        </span>
+                      )}
+                      {sourceChain === 'Avalanche' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          1 Block (Instant ~1–2s)
+                        </span>
+                      )}
+                      {sourceChain === 'Arc' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          1 Block (Instant ~1–2s)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-slate-300 text-[11px] leading-relaxed">
+                      {sourceChain === 'Base' && (
+                        <>
+                          On Base, your on-chain transfer confirms in <strong className="text-white">~2 seconds</strong> on BaseScan. However, Circle Gateway requires <strong className="text-amber-300 font-mono font-semibold">~200 block confirmations</strong> (approx. <strong className="text-white">7 to 10 minutes</strong> at 2s/block) for L2 rollup finality before funds reflect in your spendable Unified Balance.
+                        </>
+                      )}
+                      {sourceChain === 'Polygon' && (
+                        <>
+                          On Polygon PoS, block inclusion takes <strong className="text-white">~2 seconds</strong> on PolygonScan. Circle Gateway requires <strong className="text-purple-300 font-mono font-semibold">~128 to 256 block confirmations</strong> (approx. <strong className="text-white">5 to 8 minutes</strong>) for Heimdall milestone checkpoints before your balance is credited.
+                        </>
+                      )}
+                      {sourceChain === 'Ethereum' && (
+                        <>
+                          On Ethereum L1, transfer confirms in ~12 seconds on Etherscan. Circle Gateway requires <strong className="text-slate-200 font-mono font-semibold">64 block confirmations</strong> (2 Casper FFG epochs, approx. <strong className="text-white">12 to 15 minutes</strong> at 12s/block) for irreversible finality before attestation completes.
+                        </>
+                      )}
+                      {sourceChain === 'Arbitrum' && (
+                        <>
+                          On Arbitrum One, sequencer transactions confirm instantly (0.25s) on Arbiscan. Circle Gateway requires <strong className="text-sky-300 font-mono font-semibold">L1 batch posting finality</strong> (approx. <strong className="text-white">10 to 12 minutes</strong>) before cross-chain Unified Balance becomes spendable.
+                        </>
+                      )}
+                      {sourceChain === 'Avalanche' && (
+                        <>
+                          Avalanche C-Chain uses Snowman consensus with <strong className="text-emerald-400">instant sub-second finality</strong>. Deposits finalize in just <strong className="text-white">1 block (~1–2 seconds)</strong>, and Circle Gateway indexes your balance almost instantaneously.
+                        </>
+                      )}
+                      {sourceChain === 'Arc' && (
+                        <>
+                          Depositing directly on Arc Mainnet requires only <strong className="text-emerald-400">1 block confirmation</strong> (~1–2 seconds). Your Unified Balance is indexed almost instantaneously without cross-chain rollup delays.
+                        </>
+                      )}
+                    </p>
                   </div>
                 </div>
 
