@@ -17,7 +17,6 @@ import {
   Loader2, 
   ExternalLink,
   Plus,
-  CreditCard,
   Droplets,
   Info,
   Layers,
@@ -45,21 +44,17 @@ type PaymentState =
   | 'IDLE' 
   | 'CONNECTING' 
   | 'CREATING_SESSION' 
-  | 'CHECKOUT_READY' 
   | 'PENDING' 
   | 'SUCCESS' 
   | 'CANCELLED' 
   | 'FAILED' 
   | 'NOT_CONFIGURED';
 
-type FundingMode = 'unified_kit' | 'fiat_onramp';
-
 const PRESET_AMOUNTS = ['0.005', '0.01', '0.10', '1'];
 
-export default function OnrampPage() {
+export default function AddFundsPage() {
   const { address, isConnected, chain } = useAccount();
   const { switchChainAsync } = useSwitchChain();
-
 
   const [unifiedBalance, setUnifiedBalance] = useState<string | null>(null);
   const [onChainBalance, setOnChainBalance] = useState<string | null>(null);
@@ -68,8 +63,7 @@ export default function OnrampPage() {
   const [balanceConfigured, setBalanceConfigured] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Funding Rails Mode
-  const [fundingMode, setFundingMode] = useState<FundingMode>('unified_kit');
+  // Source Chain Liquidity
   const [sourceChain, setSourceChain] = useState<string>('Arc');
 
   // Amount State
@@ -80,17 +74,7 @@ export default function OnrampPage() {
   // Payment State Machine
   const [paymentState, setPaymentState] = useState<PaymentState>('IDLE');
   const [statusMessage, setStatusMessage] = useState<string>('');
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [lastDepositTx, setLastDepositTx] = useState<{ hash: string; chain: string } | null>(null);
-
-  // Server Configuration Info
-  const [configInfo, setConfigInfo] = useState<{
-    fiatConfigured: boolean;
-    appId: string | null;
-  }>({
-    fiatConfigured: false,
-    appId: null,
-  });
 
   const initialBalanceRef = useRef<number | null>(null);
 
@@ -155,28 +139,9 @@ export default function OnrampPage() {
     await fetchAuthoritativeBalance();
   }, [fetchAuthoritativeBalance]);
 
-  // Check Onramp Server Config & Balances on Mount
+  // Check Balances and Network on Mount
   useEffect(() => {
     loadWalletAndBalance();
-
-    const fetchConfig = async () => {
-      try {
-        const res = await fetch('/api/add-funds');
-        const data = await res.json();
-        const isFiatConfigured = Boolean(data?.fiatOnramp?.configured);
-        setConfigInfo({
-          fiatConfigured: isFiatConfigured,
-          appId: data?.fiatOnramp?.appId || null,
-        });
-      } catch {
-        setConfigInfo({
-          fiatConfigured: false,
-          appId: null,
-        });
-      }
-    };
-
-    fetchConfig();
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -415,58 +380,6 @@ export default function OnrampPage() {
     }
   };
 
-  // Real Add Funds Flow: Create Official Circle Onramp Session
-  const handleStartOnramp = async () => {
-    if (!hasActiveWallet) {
-      setPaymentState('FAILED');
-      setStatusMessage('Connect your wallet to continue.');
-      return;
-    }
-
-    if (!configInfo.fiatConfigured) {
-      setPaymentState('NOT_CONFIGURED');
-      setStatusMessage('Circle Card Onramp is not configured yet. Set CIRCLE_API_KEY and NEXT_PUBLIC_CIRCLE_APP_ID in .env.local.');
-      return;
-    }
-
-    const num = parseFloat(effectiveAmount);
-    if (isNaN(num) || num <= 0) {
-      setAmountError('Please enter a valid amount greater than 0.');
-      return;
-    }
-
-    setPaymentState('CREATING_SESSION');
-    setStatusMessage('Creating official Circle Onramp checkout session...');
-
-    try {
-      const res = await fetch('/api/add-funds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'create_checkout_session',
-          amount: effectiveAmount,
-          walletAddress: activeAddress,
-          walletType,
-          network: 'base',
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.status === 'CHECKOUT_READY' && data.sessionUrl) {
-        setPaymentState('CHECKOUT_READY');
-        setCheckoutUrl(data.sessionUrl);
-        setStatusMessage('Checkout session ready. Click below to open Circle hosted checkout.');
-      } else {
-        setPaymentState('FAILED');
-        setStatusMessage(data.error || 'Funding could not be completed. Please try again.');
-      }
-    } catch {
-      setPaymentState('FAILED');
-      setStatusMessage('Funding could not be completed. Please try again.');
-    }
-  };
-
 
   return (
     <div className="min-h-screen bg-black text-slate-200">
@@ -602,10 +515,10 @@ export default function OnrampPage() {
               <div className="mb-6">
                 <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
                   <Layers size={18} className="text-cyan-400" />
-                  Choose how you want to fund your balance
+                  Deposit USDC to Unified Balance
                 </h2>
                 <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                  Deposit USDC into your Arc Unified Balance using the official Circle Unified Balance Kit or Circle Card Onramp.
+                  Deposit USDC into your Arc Unified Balance using the official Circle Unified Balance Kit across any supported chain.
                 </p>
               </div>
 
@@ -616,7 +529,7 @@ export default function OnrampPage() {
                   Official Circle Unified Balance Kit (Arc Domain 26)
                 </div>
                 <p className="text-[11px] text-cyan-300/80 leading-relaxed">
-                  Powered by <code className="bg-black/50 px-1 py-0.5 rounded text-cyan-300 font-mono">@circle-fin/unified-balance-kit</code>. Allows aggregating USDC across source chains (Base, Ethereum) and routing unified liquidity directly into Arc Mainnet.
+                  Powered by <code className="bg-black/50 px-1 py-0.5 rounded text-cyan-300 font-mono">@circle-fin/unified-balance-kit</code>. Allows aggregating USDC across source chains (Base, Ethereum, Polygon, Arbitrum, Avalanche) and routing unified liquidity directly into Arc Mainnet.
                 </p>
               </div>
 
@@ -978,8 +891,6 @@ export default function OnrampPage() {
                       ? 'bg-green-950/40 border-green-800/60 text-green-300'
                       : paymentState === 'CREATING_SESSION' || paymentState === 'PENDING'
                       ? 'bg-cyan-950/40 border-cyan-800/60 text-cyan-300'
-                      : paymentState === 'CHECKOUT_READY'
-                      ? 'bg-blue-950/40 border-blue-800/60 text-blue-300'
                       : 'bg-red-950/40 border-red-800/60 text-red-300'
                   }`}
                 >
@@ -987,8 +898,6 @@ export default function OnrampPage() {
                     <CheckCircle2 size={16} className="text-green-400 shrink-0 mt-0.5" />
                   ) : paymentState === 'CREATING_SESSION' || paymentState === 'PENDING' ? (
                     <Loader2 size={16} className="text-cyan-400 animate-spin shrink-0 mt-0.5" />
-                  ) : paymentState === 'CHECKOUT_READY' ? (
-                    <CheckCircle2 size={16} className="text-blue-400 shrink-0 mt-0.5" />
                   ) : (
                     <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
                   )}
