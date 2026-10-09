@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ArrowUpRight, Zap, CheckCircle2 } from 'lucide-react';
+import { ArrowUpRight, Zap, CheckCircle2, Activity } from 'lucide-react';
 import { getExplorerForTx } from '@/lib/chainExplorers';
 
 interface TransactionItem {
@@ -42,18 +42,47 @@ export default function TransactionFeed() {
   }, []);
 
   return (
-    <div className="bg-black/95 p-4 sm:p-6 rounded-2xl border border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.15)] overflow-hidden flex flex-col h-[380px] sm:h-[420px] font-mono">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 border-b border-emerald-500/30 pb-3 sm:pb-4 gap-2">
-        <h3 className="text-base sm:text-lg font-bold flex items-center gap-2 text-emerald-400">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+    <div className="bg-black/95 p-4 sm:p-5 rounded-2xl border border-emerald-500/35 shadow-[0_0_30px_rgba(16,185,129,0.12)] overflow-hidden flex flex-col h-[390px] sm:h-[430px] font-mono">
+      {/* Terminal Title Bar */}
+      <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20 mb-3 gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block shadow-[0_0_6px_rgba(239,68,68,0.5)]"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block shadow-[0_0_6px_rgba(245,158,11,0.5)]"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block shadow-[0_0_6px_rgba(16,185,129,0.5)]"></span>
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400/90 truncate ml-1 flex items-center gap-1.5">
+            <Activity size={12} className="text-emerald-400 shrink-0" />
+            Arc Nanopayment Live Stream
           </span>
-          root@arc-mainnet:~$ nanopayment_feed --live
-        </h3>
-        <div className="border border-emerald-500/30 bg-emerald-950/30 px-3 py-1 rounded text-xs font-semibold flex items-center gap-2">
-          <span className="text-emerald-300 font-bold">{txs.filter(t => t.status === 'settled').length}</span>
-          <span className="text-emerald-600">SETTLED_EVENTS</span>
+        </div>
+
+        {/* Settled Events Counter Badge */}
+        <div className="border border-emerald-500/30 bg-emerald-950/40 px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-2 shrink-0 shadow-inner">
+          <span className="text-emerald-300 font-bold font-mono">
+            {txs.filter(t => t.status === 'settled').length}
+          </span>
+          <span className="text-emerald-500 font-bold uppercase text-[10px] tracking-wide">
+            Settled
+          </span>
+        </div>
+      </div>
+
+      {/* Terminal Command Line Box */}
+      <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-950/40 via-emerald-950/20 to-black/60 border border-emerald-500/30 rounded-xl px-3 py-2 mb-3 shadow-[inset_0_1px_4px_rgba(0,0,0,0.6)] shrink-0 overflow-hidden">
+        <span className="text-emerald-400 font-bold text-xs select-none shrink-0">❯</span>
+        <div className="flex items-center text-xs sm:text-[13px] font-bold font-mono tracking-tight overflow-x-auto scrollbar-none whitespace-nowrap min-w-0 flex-1">
+          <span className="text-emerald-400 font-bold">root@arc-mainnet</span>
+          <span className="text-emerald-600 font-bold">:</span>
+          <span className="text-cyan-400 font-bold">~</span>
+          <span className="text-slate-400 font-bold">$</span>
+          <span className="text-white ml-2 font-semibold">nanopayment_feed</span>
+          <span className="text-emerald-400 font-medium ml-1">--live</span>
+          <span className="relative flex h-2 w-2 ml-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="inline-block w-1.5 h-3.5 bg-emerald-400 animate-pulse ml-1 shrink-0"></span>
         </div>
       </div>
 
