@@ -697,7 +697,7 @@ export default function OnrampPage() {
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
                         <span>Domain 0</span>
-                        <span className="text-slate-300 font-sans text-[9px]">64 Blks (~12m)</span>
+                        <span className="text-slate-300 font-sans text-[8.5px] sm:text-[9px]">64 Blocks (~12m)</span>
                       </div>
                     </button>
                     <button
@@ -719,7 +719,7 @@ export default function OnrampPage() {
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
                         <span>Domain 7</span>
-                        <span className="text-purple-300 font-sans text-[9px]">~128 Blks (~5m)</span>
+                        <span className="text-purple-300 font-sans text-[8.5px] sm:text-[9px]">~128 Blocks (~5m)</span>
                       </div>
                     </button>
                     <button
@@ -741,7 +741,7 @@ export default function OnrampPage() {
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
                         <span>Domain 3</span>
-                        <span className="text-sky-300 font-sans text-[9px]">~1000 Blks (~10m)</span>
+                        <span className="text-sky-300 font-sans text-[8.5px] sm:text-[9px]">~1000 Blocks (~10m)</span>
                       </div>
                     </button>
                     <button
@@ -763,7 +763,7 @@ export default function OnrampPage() {
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
                         <span>Domain 1</span>
-                        <span className="text-emerald-400 font-sans text-[9px]">1 Blk (Instant)</span>
+                        <span className="text-emerald-400 font-sans text-[8.5px] sm:text-[9px]">1 Block (Instant)</span>
                       </div>
                     </button>
                   </div>
