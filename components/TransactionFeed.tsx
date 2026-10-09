@@ -77,11 +77,6 @@ export default function TransactionFeed() {
           <span className="text-cyan-400 font-bold">~</span>
           <span className="text-slate-400 font-bold">$</span>
           <span className="text-white ml-2 font-semibold">nanopayment_feed</span>
-          <span className="text-emerald-400 font-medium ml-1">--live</span>
-          <span className="relative flex h-2 w-2 ml-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
           <span className="inline-block w-1.5 h-3.5 bg-emerald-400 animate-pulse ml-1 shrink-0"></span>
         </div>
       </div>
