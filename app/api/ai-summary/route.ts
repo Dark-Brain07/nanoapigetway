@@ -37,9 +37,9 @@ async function handleSummary(req: NextRequest) {
   try {
     let summaryText = '';
 
-    // Try Groq first for ultra-fast, live real-time LLM inference (openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b)
+    // Try Groq first for ultra-fast, live real-time LLM inference (openai/gpt-oss-20b ~2s, qwen/qwen3.8-27b)
     if (groqKey && groqKey !== 'placeholder' && !groqKey.includes('get_free_from')) {
-      for (const model of ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b']) {
+      for (const model of ['openai/gpt-oss-20b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-120b']) {
         try {
           const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { protectWithX402 } from '@/lib/x402Server';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   // Authoritative x402 payment validation & Circle Gateway settlement
@@ -20,12 +21,12 @@ export async function POST(req: NextRequest) {
 
     let replyText = '';
 
-    // 1. Try Groq ultra-fast LPU inference first (openai/gpt-oss-120b / qwen/qwen3.8-27b)
+    // 1. Try Groq ultra-fast LPU inference first (openai/gpt-oss-20b ~2.5s, qwen/qwen3.8-27b ~4s)
     if (groqKey && groqKey !== 'placeholder' && !groqKey.includes('get_free_from')) {
-      for (const model of ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b']) {
+      for (const model of ['openai/gpt-oss-20b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-120b']) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          const timeoutId = setTimeout(() => controller.abort(), 12000);
 
           const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
                 })),
                 { role: 'user', content: message },
               ],
+              max_tokens: 2048,
             }),
           });
           clearTimeout(timeoutId);
@@ -55,6 +57,9 @@ export async function POST(req: NextRequest) {
             const groqData = await groqRes.json();
             replyText = groqData.choices?.[0]?.message?.content || '';
             if (replyText) break;
+          } else {
+            const errData = await groqRes.json().catch(() => ({}));
+            console.warn(`[Chat API] Groq (${model}) returned status ${groqRes.status}:`, errData);
           }
         } catch (e) {
           console.warn(`[Chat API] Groq (${model}) error:`, e);
