@@ -224,3 +224,19 @@ For in-depth protocol architecture, sequence diagrams, and cross-chain mechanics
 - [Official Circle Gateway Documentation](https://developers.circle.com/gateway)
 - [x402 Payment Required Protocol](https://x402.org)
 - [Arc Network Documentation](https://docs.arc.io)
+
+---
+
+## 12. Future Roadmap & Ecosystem Milestones
+
+- **Phase 1: Developer SDK (`@nanoapi/sdk`)**
+  - Release a lightweight npm/Python package allowing Web2 & Web3 developers to paywall any Express, Next.js, or FastAPI endpoint with just 2 lines of middleware.
+- **Phase 2: Autonomous AI Agent Plugins (LangChain / ElizaOS / CrewAI)**
+  - Native tools for autonomous agents to manage an Arc USDC micropayment allowance, allowing LLMs to autonomously pay for web browsing, search, and compute without human intervention.
+- **Phase 3: Dynamic Per-Token Streaming Billing**
+  - Transition from fixed per-request pricing to real-time per-token / per-millisecond streaming micropayments for LLMs and video processing on Arc.
+- **Phase 4: Open API Marketplace & Automated Revenue Splitting**
+  - Enable third-party developers to list custom APIs on NanoAPI Gateway, with instant smart contract revenue splits between creators, hosting providers, and liquidity minters.
+- **Phase 5: High-Frequency Settlement Rollups**
+  - Aggregate millions of off-chain EIP-712 authorizations into periodic cryptographic batch settlements on Arc Mainnet, pushing per-request network overhead to near zero.
+
