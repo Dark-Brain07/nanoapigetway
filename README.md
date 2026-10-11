@@ -230,11 +230,12 @@ For in-depth protocol architecture, sequence diagrams, and cross-chain mechanics
 ## 12. Future Roadmap & Ecosystem Milestones
 
 ### 🌟 Milestone 1: P2P AI API & Compute Rental Marketplace (DePIN Layer)
-Turn idle AI compute and private API endpoints into an automated income stream:
+Turn idle AI compute and private API endpoints into an automated income stream while freeing users from expensive monthly SaaS subscriptions:
 - **Provider Account & Node Registration:** Any developer or user can connect their Arc wallet, register their custom AI endpoints (self-hosted Ollama, vLLM, private GPU clusters, or specialized fine-tuned models), and set their custom pricing per request.
-- **Permissionless Compute Renting:** Autonomous AI agents discover and rent compute capacity on-demand. When an agent queries the endpoint, NanoAPI Gateway handles the x402 payment validation.
+- **Zero-Subscription Consumer Renting:** Renters and AI agents **never pay monthly subscriptions** ($20–$50/mo lock-ins) or upfront commitments. They pay purely for their exact real-time consumption ($0.0001 USDC/request). If a user makes 3 calls, they pay for 3 calls—no recurring bills, no credit cards, no expiring credits.
+- **Permissionless Compute Renting:** Autonomous AI agents discover and rent compute capacity on-demand. When an agent queries the endpoint, NanoAPI Gateway handles the x402 payment validation automatically.
 - **Non-Custodial Instant Payouts:** 100% of the earned revenue settles atomically into the provider’s Arc Mainnet wallet in native USDC with sub-second finality. No withdrawal delays, no minimum payout thresholds.
-- **Decentralized SLA & Uptime Staking:** Providers stake a small USDC bond; an automated health checker routes traffic only to high-performance, responsive nodes, creating an open market for decentralized AI compute.
+- **Decentralized SLA & Uptime Staking:** Providers stake a small USDC bond; an automated health checker routes traffic only to high-performance, responsive nodes, creating a reliable, trustless market for decentralized AI compute.
 
 ### 🛠️ Milestone 2: Developer Middleware SDK (`@nanoapi/sdk`)
 - Release lightweight npm and Python SDKs allowing Web2 & Web3 developers to paywall any Express, Next.js, or FastAPI endpoint with 2 lines of code (`app.use(nanoApiGuard({ price: '$0.001' }))`).
