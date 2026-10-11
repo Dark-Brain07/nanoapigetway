@@ -229,14 +229,23 @@ For in-depth protocol architecture, sequence diagrams, and cross-chain mechanics
 
 ## 12. Future Roadmap & Ecosystem Milestones
 
-- **Phase 1: Developer SDK (`@nanoapi/sdk`)**
-  - Release a lightweight npm/Python package allowing Web2 & Web3 developers to paywall any Express, Next.js, or FastAPI endpoint with just 2 lines of middleware.
-- **Phase 2: Autonomous AI Agent Plugins (LangChain / ElizaOS / CrewAI)**
-  - Native tools for autonomous agents to manage an Arc USDC micropayment allowance, allowing LLMs to autonomously pay for web browsing, search, and compute without human intervention.
-- **Phase 3: Dynamic Per-Token Streaming Billing**
-  - Transition from fixed per-request pricing to real-time per-token / per-millisecond streaming micropayments for LLMs and video processing on Arc.
-- **Phase 4: Open API Marketplace & Automated Revenue Splitting**
-  - Enable third-party developers to list custom APIs on NanoAPI Gateway, with instant smart contract revenue splits between creators, hosting providers, and liquidity minters.
-- **Phase 5: High-Frequency Settlement Rollups**
-  - Aggregate millions of off-chain EIP-712 authorizations into periodic cryptographic batch settlements on Arc Mainnet, pushing per-request network overhead to near zero.
+### 🌟 Milestone 1: P2P AI API & Compute Rental Marketplace (DePIN Layer)
+Turn idle AI compute and private API endpoints into an automated income stream:
+- **Provider Account & Node Registration:** Any developer or user can connect their Arc wallet, register their custom AI endpoints (self-hosted Ollama, vLLM, private GPU clusters, or specialized fine-tuned models), and set their custom pricing per request.
+- **Permissionless Compute Renting:** Autonomous AI agents discover and rent compute capacity on-demand. When an agent queries the endpoint, NanoAPI Gateway handles the x402 payment validation.
+- **Non-Custodial Instant Payouts:** 100% of the earned revenue settles atomically into the provider’s Arc Mainnet wallet in native USDC with sub-second finality. No withdrawal delays, no minimum payout thresholds.
+- **Decentralized SLA & Uptime Staking:** Providers stake a small USDC bond; an automated health checker routes traffic only to high-performance, responsive nodes, creating an open market for decentralized AI compute.
+
+### 🛠️ Milestone 2: Developer Middleware SDK (`@nanoapi/sdk`)
+- Release lightweight npm and Python SDKs allowing Web2 & Web3 developers to paywall any Express, Next.js, or FastAPI endpoint with 2 lines of code (`app.use(nanoApiGuard({ price: '$0.001' }))`).
+
+### 🤖 Milestone 3: Autonomous AI Agent Plugins (LangChain / ElizaOS / CrewAI)
+- Native tools for autonomous agents to manage an Arc USDC micropayment allowance, allowing LLMs to autonomously pay for web browsing, search, and compute without human intervention.
+
+### ⚡ Milestone 4: Dynamic Per-Token Streaming Billing
+- Transition from fixed per-request pricing to real-time per-token / per-millisecond streaming micropayments for live LLM completions and media processing on Arc.
+
+### 📦 Milestone 5: High-Frequency Settlement Rollups
+- Aggregate millions of off-chain EIP-712 authorizations into periodic cryptographic batch settlements on Arc Mainnet, pushing per-request network overhead to near zero.
+
 
