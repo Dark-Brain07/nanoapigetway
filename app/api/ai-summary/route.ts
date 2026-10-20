@@ -32,9 +32,7 @@ async function handleSummary(req: NextRequest) {
   }
 
   const geminiKey = process.env.GEMINI_API_KEY;
-  const fallbackGroq = ['gsk', 'XJwUAHn218RjKhVhnGLcWGdyb3FYA7YMXAGZXi07LaK5p7aLAlRN'].join('_');
-  const rawGroqKey = process.env.GROQ_API_KEY?.trim();
-  const groqKey = (rawGroqKey && rawGroqKey.length > 5) ? rawGroqKey : fallbackGroq;
+  const groqKey = process.env.GROQ_API_KEY;
 
   try {
     let summaryText = '';
